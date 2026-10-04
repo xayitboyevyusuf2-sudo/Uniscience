@@ -1,0 +1,2 @@
+@php $m = ['approved'=>['Tasdiqlandi','bg-emerald-100 text-emerald-800'],'rejected'=>['Rad etildi','bg-red-100 text-red-800'],'manual'=>['Qo‘lda tekshiruvda','bg-amber-100 text-amber-800'],'pending'=>['Ko‘rib chiqilmoqda','bg-slate-100 text-slate-700']][$s] ?? [$s,'bg-slate-100 text-slate-700']; @endphp
+<span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-semibold {{ $m[1] }}">{{ $m[0] }}</span>
