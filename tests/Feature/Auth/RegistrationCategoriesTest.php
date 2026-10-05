@@ -6,6 +6,7 @@ use App\Integrations\Hemis\HemisAuthAdapter;
 use App\Integrations\Hemis\NullHemisAdapter;
 use App\Models\User;
 use App\Notifications\AccountApproved;
+use App\Notifications\VerifyEmailUz;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Notification;
@@ -32,6 +33,19 @@ class RegistrationCategoriesTest extends TestCase
         $this->assertAuthenticated();
     }
 
+    public function test_bachelor_registration_sends_verification_email_and_redirects_to_notice(): void
+    {
+        Notification::fake([VerifyEmailUz::class]);
+
+        $this->post('/royxat', $this->studentPayload())
+            ->assertRedirect('/email/tasdiqlash');
+
+        $user = User::where('email', 'elbek@example.uz')->firstOrFail();
+
+        $this->assertAuthenticatedAs($user);
+        Notification::assertSentTo($user, VerifyEmailUz::class);
+    }
+
     public function test_registration_ignores_username_from_the_request(): void
     {
         $this->post('/royxat', $this->studentPayload(['username' => 'nik']));
@@ -56,8 +70,8 @@ class RegistrationCategoriesTest extends TestCase
             'student_id' => null,
         ]);
 
-        $this->post('/kirish', ['email' => 'aziza@example.uz', 'password' => 'validPass123'])
-            ->assertSessionHasErrors(['email' => 'Admin tasdig‘i kutilmoqda. Tasdiqlangach, tizimga kirishingiz mumkin.']);
+        $this->post('/kirish', ['login' => 'aziza@example.uz', 'password' => 'validPass123'])
+            ->assertSessionHasErrors(['login' => 'Admin tasdig‘i kutilmoqda. Tasdiqlangach, tizimga kirishingiz mumkin.']);
         $this->assertGuest();
     }
 
@@ -83,7 +97,7 @@ class RegistrationCategoriesTest extends TestCase
         Notification::assertSentTo($user, AccountApproved::class);
 
         $this->post('/chiqish');
-        $this->post('/kirish', ['email' => $user->email, 'password' => 'validPass123'])
+        $this->post('/kirish', ['login' => $user->email, 'password' => 'validPass123'])
             ->assertRedirect('/portfel');
         $this->assertAuthenticatedAs($user);
     }
@@ -104,8 +118,8 @@ class RegistrationCategoriesTest extends TestCase
     {
         $user = User::factory()->create(['approval_status' => 'rejected', 'password' => 'validPass123']);
 
-        $this->post('/kirish', ['email' => $user->email, 'password' => 'validPass123'])
-            ->assertSessionHasErrors(['email' => 'Arizangiz rad etilgan. Batafsil ma’lumot uchun administratorga murojaat qiling.']);
+        $this->post('/kirish', ['login' => $user->email, 'password' => 'validPass123'])
+            ->assertSessionHasErrors(['login' => 'Arizangiz rad etilgan. Batafsil ma’lumot uchun administratorga murojaat qiling.']);
 
         $this->assertGuest();
     }
@@ -114,8 +128,8 @@ class RegistrationCategoriesTest extends TestCase
     {
         $user = User::factory()->create(['approval_status' => 'approved', 'blocked' => true, 'password' => 'validPass123']);
 
-        $this->post('/kirish', ['email' => $user->email, 'password' => 'validPass123'])
-            ->assertSessionHasErrors(['email' => 'Email yoki parol noto‘g‘ri']);
+        $this->post('/kirish', ['login' => $user->email, 'password' => 'validPass123'])
+            ->assertSessionHasErrors(['login' => 'Hisobingiz bloklangan. Administratorga murojaat qiling.']);
 
         $this->assertGuest();
     }
@@ -212,7 +226,7 @@ class RegistrationCategoriesTest extends TestCase
             'category' => 'magistr',
             'email' => 'master@example.uz',
             'student_id' => 'master-1',
-        ]))->assertRedirect('/portfel');
+        ]))->assertRedirect('/email/tasdiqlash');
 
         $this->assertDatabaseHas('users', [
             'email' => 'master@example.uz',

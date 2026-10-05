@@ -26,8 +26,8 @@
 <label for="department">Kafedra yoki bo‘lim</label><input class="i" id="department" name="department" value="{{ old('department') }}" data-required>
 </section>
 <label for="email">Email</label><input class="i" id="email" type="email" name="email" value="{{ old('email') }}" required>
-<label for="password">Parol</label><input class="i" id="password" type="password" name="password" required>
-<label for="password_confirmation">Parolni takrorlang</label><input class="i" id="password_confirmation" type="password" name="password_confirmation" required>
+<div class="flex items-end gap-2"><div class="flex-1"><label for="password">Parol</label><input class="i" id="password" type="password" name="password" required></div><button class="btn mb-0" type="button" data-password-toggle aria-controls="password" aria-label="Parolni ko‘rsatish" aria-pressed="false">Ko‘rsatish</button></div>
+<div class="flex items-end gap-2"><div class="flex-1"><label for="password_confirmation">Parolni takrorlang</label><input class="i" id="password_confirmation" type="password" name="password_confirmation" required></div><button class="btn mb-0" type="button" data-password-toggle aria-controls="password_confirmation" aria-label="Parolni ko‘rsatish" aria-pressed="false">Ko‘rsatish</button></div>
 <label class="font-normal"><input type="checkbox" name="consent" value="1" @checked(old('consent'))> Shaxsiy ma’lumotlarni qayta ishlashga roziman (O‘RQ-547)</label>
 <button class="btn mt-4">Ro‘yxatdan o‘tish</button></form>
 <script>
