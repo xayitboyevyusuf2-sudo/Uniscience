@@ -14,6 +14,24 @@
  if (auth()->check() && in_array(auth()->user()->role,['admin','moderator'])) $nav[] = ['/admin','Boshqaruv'];
 @endphp
 <nav class="flex flex-wrap gap-1 text-sm flex-1">@foreach($nav as [$u,$l])<a href="{{ $u }}" class="px-3 py-1.5 rounded-md {{ request()->is(ltrim($u,'/').'*') ? 'bg-white/20 font-semibold' : 'hover:bg-white/10' }}">{{ $l }}</a>@endforeach</nav>
+@auth
+<details class="relative shrink-0">
+<summary class="relative flex size-10 list-none cursor-pointer items-center justify-center rounded-md hover:bg-white/10" aria-label="Bildirishnomalar">
+<svg class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9M10 21h4"/></svg>
+@if($notificationUnreadCount > 0)<span class="absolute -right-1 -top-1 min-w-5 rounded-full bg-red-600 px-1 text-center text-xs leading-5 text-white">{{ $notificationUnreadCount > 99 ? '99+' : $notificationUnreadCount }}</span>@endif
+</summary>
+<div class="absolute right-0 z-30 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-md border border-slate-200 bg-white text-slate-900 shadow-xl">
+<div class="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3"><b>Bildirishnomalar</b><a class="text-sm underline" href="/bildirishnomalar">Barchasi</a></div>
+@if($notificationUnreadCount > 0)<form method="post" action="/bildirishnomalar/hammasi-oqildi" class="border-b border-slate-200 px-4 py-2">@csrf<button class="text-sm underline">Hammasini o‘qildi deb belgilash</button></form>@endif
+<ul class="max-h-96 overflow-y-auto divide-y divide-slate-200">
+@forelse($recentNotifications as $notification)
+<li class="flex items-start gap-2 px-4 py-3 {{ $notification->read_at ? '' : 'bg-sky-50' }}"><a class="min-w-0 flex-1" href="{{ $notification->data['url'] ?? '/bildirishnomalar' }}"><span class="block text-sm font-semibold">{{ $notification->data['title'] ?? 'Bildirishnoma' }}</span><span class="mt-1 block text-xs text-slate-600">{{ $notification->data['body'] ?? '' }}</span></a>@if(! $notification->read_at)<form method="post" action="{{ route('notifications.read', $notification->id) }}">@csrf<button class="text-xs underline" aria-label="Bildirishnomani o‘qildi deb belgilash">O‘qildi</button></form>@endif</li>
+@empty<li class="px-4 py-4 text-sm text-slate-500">Hozircha bildirishnomalar yo‘q.</li>
+@endforelse
+</ul>
+</div>
+</details>
+@endauth
 @auth<form method="post" action="/chiqish">@csrf<button class="text-sm px-3 py-1.5 rounded-md border border-white/40 hover:bg-white/10 cursor-pointer">Chiqish</button></form>@else<a class="text-sm px-3 py-1.5 rounded-md border border-white/40 hover:bg-white/10" href="/kirish">Kirish</a>@endauth
 </div></header>
 @yield('hero')

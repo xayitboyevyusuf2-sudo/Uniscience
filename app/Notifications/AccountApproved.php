@@ -9,7 +9,7 @@ class AccountApproved extends Notification
 {
     public function via($notifiable): array
     {
-        return ['mail'];
+        return ['mail', 'database'];
     }
 
     public function toMail($notifiable): MailMessage
@@ -20,5 +20,15 @@ class AccountApproved extends Notification
             ->line('Hisobingiz administrator tomonidan tasdiqlandi.')
             ->action('Tizimga kirish', url('/kirish'))
             ->salutation('UniScience.uz');
+    }
+
+    public function toArray($notifiable): array
+    {
+        return [
+            'title' => 'Hisobingiz tasdiqlandi',
+            'body' => 'Administrator hisobingizni tasdiqladi. Endi tizimga kirishingiz mumkin.',
+            'url' => '/kirish',
+            'type' => 'account_approved',
+        ];
     }
 }

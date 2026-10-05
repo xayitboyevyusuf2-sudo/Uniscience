@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ProfileController;
@@ -26,6 +27,9 @@ Route::middleware('guest')->group(function () {
 });
 Route::middleware('auth')->group(function () {
     Route::post('/chiqish', [AuthController::class, 'logout']);
+    Route::get('/bildirishnomalar', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/bildirishnomalar/hammasi-oqildi', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::post('/bildirishnomalar/{id}/oqildi', [NotificationController::class, 'markRead'])->whereUuid('id')->name('notifications.read');
     Route::get('/email/tasdiqlash', [EmailVerificationController::class, 'notice'])->name('verification.notice');
     Route::post('/email/tasdiqlash', [EmailVerificationController::class, 'resend'])->middleware('throttle:6,1')->name('verification.send');
     Route::get('/email/tasdiqlash/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
@@ -39,9 +43,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/maqola/{article}', [ArticleController::class, 'show'])->middleware('verified');
     Route::post('/malumotnoma', [PageController::class, 'certify'])->middleware('verified');
     Route::get('/admin', [AdminController::class, 'index']);
+    Route::get('/admin/audit', [AdminController::class, 'audit'])->name('admin.audit');
     Route::post('/admin/qaror/{article}', [AdminController::class, 'decide']);
     Route::post('/admin/import', [AdminController::class, 'import']);
     Route::post('/admin/sozlamalar', [AdminController::class, 'settings']);
+    Route::get('/admin/foydalanuvchi/{user}/tahrir', [ProfileController::class, 'editUser']);
+    Route::post('/admin/foydalanuvchi/{user}/tahrir', [ProfileController::class, 'updateUser']);
     Route::post('/admin/foydalanuvchi/{user}/tasdiq', [AdminController::class, 'approveUser'])->name('admin.users.approval');
     Route::post('/admin/foydalanuvchi/{user}', [AdminController::class, 'role']);
 });

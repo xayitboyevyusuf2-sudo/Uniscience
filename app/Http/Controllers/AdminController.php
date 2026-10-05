@@ -9,8 +9,10 @@ use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\AccountApproved;
 use App\Notifications\ArticleStatus;
+use App\Services\AuditLog;
 use App\Services\JournalImporter;
 use App\Services\Verifier;
+use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -43,11 +45,54 @@ class AdminController extends Controller
             'limit' => Setting::get('yearly_limit', config('uniscience.yearly_limit')), 'log' => DB::table('setting_changes')->latest('id')->take(5)->get()]);
     }
 
+    public function audit(Request $request): View
+    {
+        $this->guard(['admin']);
+        $filters = $request->validate([
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'action' => ['nullable', 'string', 'max:190'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date', 'after_or_equal:from'],
+        ], [
+            'user_id.integer' => 'Foydalanuvchi filtri noto‘g‘ri.',
+            'user_id.exists' => 'Tanlangan foydalanuvchi topilmadi.',
+            'action.max' => 'Amal filtri juda uzun.',
+            'from.date' => 'Boshlanish sanasi noto‘g‘ri.',
+            'to.date' => 'Tugash sanasi noto‘g‘ri.',
+            'to.after_or_equal' => 'Tugash sanasi boshlanish sanasidan oldin bo‘lishi mumkin emas.',
+        ]);
+
+        $query = DB::table('audit_logs')
+            ->leftJoin('users', 'users.id', '=', 'audit_logs.user_id')
+            ->select('audit_logs.*', 'users.name as actor_name', 'users.email as actor_email');
+
+        if (! empty($filters['user_id'])) {
+            $query->where('audit_logs.user_id', $filters['user_id']);
+        }
+        if (! empty($filters['action'])) {
+            $query->where('audit_logs.action', 'like', '%'.$filters['action'].'%');
+        }
+        if (! empty($filters['from'])) {
+            $query->whereDate('audit_logs.created_at', '>=', $filters['from']);
+        }
+        if (! empty($filters['to'])) {
+            $query->whereDate('audit_logs.created_at', '<=', $filters['to']);
+        }
+
+        return view('admin.audit', [
+            'logs' => $query->orderByDesc('audit_logs.created_at')->orderByDesc('audit_logs.id')->paginate(25)->withQueryString(),
+            'users' => User::query()->orderBy('name')->get(['id', 'name', 'email']),
+            'filters' => $filters,
+        ]);
+    }
+
     public function approveUser(UserApprovalRequest $r, User $user)
     {
         abort_unless($user->approval_status === 'pending', 422);
         $approved = $r->validated()['decision'] === 'approve';
+        $old = ['approval_status' => $user->approval_status];
         $user->update(['approval_status' => $approved ? 'approved' : 'rejected']);
+        AuditLog::record('user.approval_decided', $user, $old, ['approval_status' => $user->approval_status]);
         if ($approved) {
             try {
                 $user->notify(new AccountApproved);
@@ -67,6 +112,7 @@ class AdminController extends Controller
         abort_unless($article->status === 'manual', 422);
         $r->validate(['decision' => 'required|in:approve,reject', 'note' => 'required_if:decision,reject|nullable|string|max:500']);
         $ok = $r->decision === 'approve';
+        $old = $article->only(['status', 'reason', 'journal_id']);
         $j = $article->journal;
         if ($ok && ! $j) { // moderator matches the journal ("12 · Name"); only the leading id is used
             $j = Journal::find((int) $r->journal_pick);
@@ -78,6 +124,7 @@ class AdminController extends Controller
         if ($ok && $article->issn && ! $j->issn && ! Journal::where('issn', $article->issn)->exists()) {
             $j->update(['issn' => $article->issn]);
         } // the list learns ISSNs
+        AuditLog::record('article.review_decided', $article, $old, $article->only(['status', 'reason', 'journal_id']));
         DB::table('review_logs')->insert(['article_id' => $article->id, 'user_id' => $u->id, 'decision' => $ok ? 'approved' : 'rejected', 'note' => $r->note, 'created_at' => now(), 'updated_at' => now()]);
         try {
             $article->user->notify(new ArticleStatus($article->fresh()));
@@ -89,18 +136,23 @@ class AdminController extends Controller
     }
 
     public function import(Request $r) // ISSN optional; never deletes
-    {$this->guard(['admin']);
+    {
+        $this->guard(['admin']);
         $r->validate(['csv' => 'required|file|mimes:csv,txt']);
         set_time_limit(300);
+        $imported = JournalImporter::fromFile($r->file('csv')->getRealPath());
+        AuditLog::record('journals.imported', null, null, ['count' => $imported]);
 
-        return back()->with('ok', JournalImporter::fromFile($r->file('csv')->getRealPath()).' ta yozuv import qilindi');
+        return back()->with('ok', $imported.' ta yozuv import qilindi');
     }
 
     public function settings(Request $r)
     {
         $this->guard(['admin']);
         $r->validate(['yearly_limit' => 'required|integer|min:1|max:50']);
+        $oldLimit = Setting::get('yearly_limit', config('uniscience.yearly_limit'));
         Setting::put('yearly_limit', $r->yearly_limit, auth()->id());
+        AuditLog::record('settings.yearly_limit_updated', null, ['yearly_limit' => $oldLimit], ['yearly_limit' => (int) $r->yearly_limit]);
 
         return back()->with('ok', 'Saqlandi');
     }
@@ -109,8 +161,10 @@ class AdminController extends Controller
     {
         $this->guard(['admin']);
         $r->validate(['role' => 'required|in:student,moderator,admin']);
+        $old = $user->only(['role', 'blocked']);
         $user->update(['role' => $r->role, 'blocked' => $r->boolean('blocked')]);
+        AuditLog::record('user.role_or_block_updated', $user, $old, $user->only(['role', 'blocked']));
 
-        return back()->with('ok','Yangilandi');
+        return back()->with('ok', 'Yangilandi');
     }
 }
