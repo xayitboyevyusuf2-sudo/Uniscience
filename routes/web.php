@@ -1,10 +1,12 @@
 <?php
 
+use App\Http\Controllers\AdminContentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminJournalController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\GuideController;
 use App\Http\Controllers\JournalSearchController;
 use App\Http\Controllers\ModeratorController;
 use App\Http\Controllers\NotificationController;
@@ -51,6 +53,20 @@ Route::middleware('auth')->group(function () {
     Route::get('/jurnallar', [PageController::class, 'journals'])->name('journals.index');
     Route::get('/reyting/mening', [RatingController::class, 'my'])->name('ratings.my');
     Route::get('/reyting/eksport.csv', [RatingController::class, 'exportCsv'])->name('ratings.export.csv');
+    Route::get('/yoriqnoma', [GuideController::class, 'index'])->name('guides.index');
+    Route::get('/yoriqnoma/hujjat/{guide}', [GuideController::class, 'showGuide'])->name('guides.show');
+    Route::get('/yoriqnoma/hujjat/{guide}/yuklab-olish', [GuideController::class, 'downloadGuide'])->name('guides.download');
+    Route::get('/yoriqnoma/video/{video}', [GuideController::class, 'showVideo'])->name('videos.show');
+    Route::get('/yoriqnoma/video/{video}/oqim', [GuideController::class, 'streamVideo'])->name('videos.stream');
+    Route::get('/yoriqnoma/video/{video}/yuklab-olish', [GuideController::class, 'downloadVideo'])->name('videos.download');
+    Route::get('/admin/yoriqnoma', [AdminContentController::class, 'guides'])->name('admin.guides.index');
+    Route::post('/admin/yoriqnoma', [AdminContentController::class, 'storeGuide'])->name('admin.guides.store');
+    Route::post('/admin/yoriqnoma/{guide}', [AdminContentController::class, 'updateGuide'])->name('admin.guides.update');
+    Route::delete('/admin/yoriqnoma/{guide}', [AdminContentController::class, 'destroyGuide'])->name('admin.guides.destroy');
+    Route::get('/admin/videolar', [AdminContentController::class, 'videos'])->name('admin.videos.index');
+    Route::post('/admin/videolar', [AdminContentController::class, 'storeVideo'])->name('admin.videos.store');
+    Route::post('/admin/videolar/{video}', [AdminContentController::class, 'updateVideo'])->name('admin.videos.update');
+    Route::delete('/admin/videolar/{video}', [AdminContentController::class, 'destroyVideo'])->name('admin.videos.destroy');
     Route::get('/reyting/eksport.pdf', [RatingController::class, 'exportPdf'])->name('ratings.export.pdf');
     Route::get('/moderator/navbat', [ModeratorController::class, 'queue'])->name('moderator.queue');
     Route::get('/moderator/maqola/{article}', [ModeratorController::class, 'show'])->name('moderator.articles.show');
