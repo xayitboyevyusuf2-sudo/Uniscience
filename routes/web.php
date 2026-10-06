@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailVerificationController;
+use App\Http\Controllers\JournalSearchController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PasswordController;
@@ -13,6 +14,8 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/reyting', [PageController::class, 'rating']);
 Route::get('/baza', [PageController::class, 'base']);
+Route::get('/api/jurnallar/qidiruv', JournalSearchController::class)->middleware(['auth', 'throttle:60,1'])->name('journals.search');
+Route::get('/api/jurnallar/qidiruv', JournalSearchController::class)->middleware(['auth', 'throttle:60,1'])->name('journals.search');
 Route::get('/malumotnoma/{token}', [PageController::class, 'verify']);
 Route::middleware('guest')->group(function () {
     Route::get('/royxat', [AuthController::class, 'showRegister']);

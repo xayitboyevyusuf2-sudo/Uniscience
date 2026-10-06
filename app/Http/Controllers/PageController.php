@@ -40,10 +40,11 @@ class PageController extends Controller
                 ->orWhere('coauthors', 'like', "%$t%")->orWhereHas('user', fn ($y) => $y->where('name', 'like', "%$t%")));
         }
         if ($r->field) {
-            $q->whereHas('journal', fn ($x) => $x->where('field', 'like', '%'.$r->field.'%'));
+            $q->where(fn ($x) => $x->where('articles.field', 'like', '%'.$r->field.'%')->orWhereHas('journal', fn ($j) => $j->where('field', 'like', '%'.$r->field.'%')));
         }
         if ($r->tier) {
-            $q->whereHas('journal', fn ($x) => $x->where('tier', $r->tier));
+            $forcedTypes = array_keys(array_filter(config('uniscience.article_types'), fn ($type) => ($type['forced_tier'] ?? null) === $r->tier));
+            $q->where(fn ($x) => $x->whereIn('articles.type', $forcedTypes)->orWhereHas('journal', fn ($j) => $j->where('tier', $r->tier)));
         }
         if ($r->year) {
             $q->whereYear('published_at', (int) $r->year);
@@ -60,7 +61,8 @@ class PageController extends Controller
     }
 
     public function verify($token) // public, read-only (FR-28)
-    {$c = Certificate::where('token', $token)->with('user')->firstOrFail();
+    {
+        $c = Certificate::where('token', $token)->with('user')->firstOrFail();
 
         return view('verify', ['c' => $c, 's' => Scorer::for($c->user)]);
     }

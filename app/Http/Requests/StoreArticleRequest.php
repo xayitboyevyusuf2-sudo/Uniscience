@@ -26,6 +26,9 @@ class StoreArticleRequest extends FormRequest
      */
     public function rules(): array
     {
+        $family = config('uniscience.article_types.'.$this->input('type').'.family');
+        $fieldRequired = in_array($family, ['scopus', 'conference'], true);
+
         return [
             'title' => ['required', 'string', 'max:500'],
             'annotation_uz' => ['required', 'string', 'min:50'],
@@ -35,8 +38,11 @@ class StoreArticleRequest extends FormRequest
             'keywords_ru' => ['required', 'string', 'max:500'],
             'keywords_en' => ['required', 'string', 'max:500'],
             'type' => ['required', Rule::in(array_keys(config('uniscience.article_types', [])))],
+            'field' => [Rule::excludeIf(! $fieldRequired), Rule::requiredIf($fieldRequired), 'string', 'max:500'],
             'published_at' => ['required', 'date', 'before_or_equal:today'],
             'journal_name' => ['required', 'string', 'max:255'],
+            'journal_id' => [Rule::excludeIf($family !== 'journal'), 'nullable', 'integer', Rule::exists('journals', 'id')],
+            'journal_not_listed' => [Rule::excludeIf($family !== 'journal'), 'sometimes', 'boolean'],
             'issn' => ['nullable', 'regex:/^\d{4}-\d{3}[\dXx]$/'],
             'url' => ['required', 'url', 'max:500'],
             'doi' => ['nullable', 'string', 'max:190'],
@@ -50,6 +56,11 @@ class StoreArticleRequest extends FormRequest
                 Rule::exists('users', 'id')->where(fn ($query) => $query->whereIn('category', ['professor', 'tadqiqotchi'])),
             ],
             'pdf' => ['required', 'file', 'mimes:pdf', 'mimetypes:application/pdf', 'max:20480'],
+            'conference_certificate' => [
+                Rule::excludeIf($family !== 'conference'),
+                Rule::requiredIf($family === 'conference'),
+                'file', 'mimes:pdf', 'mimetypes:application/pdf', 'max:10240',
+            ],
         ];
     }
 
@@ -82,6 +93,13 @@ class StoreArticleRequest extends FormRequest
             'keywords_en.required' => 'Ingliz tilidagi kalit so‘zlarni kiriting.',
             'type.required' => 'Nashr turini tanlang.',
             'type.in' => 'Tanlangan nashr turi noto‘g‘ri.',
+            'field.required' => 'Scopus/WoS yoki konferensiya nashri uchun sohani tanlang.',
+            'field.in' => 'Tanlangan soha ro‘yxatda mavjud emas.',
+            'journal_id.exists' => 'Tanlangan jurnal ma’lumotnomada topilmadi.',
+            'conference_certificate.required' => 'Konferensiya sertifikati PDF faylini yuklang.',
+            'conference_certificate.mimes' => 'Konferensiya sertifikati PDF bo‘lishi kerak.',
+            'conference_certificate.mimetypes' => 'Sertifikat faylining tarkibi PDF bo‘lishi kerak.',
+            'conference_certificate.max' => 'Sertifikat hajmi 10 MB dan oshmasligi kerak.',
             'published_at.required' => 'Chop etilgan sanani kiriting.',
             'published_at.before_or_equal' => 'Chop etilgan sana bugungi kundan keyin bo‘lishi mumkin emas.',
             'journal_name.required' => 'Jurnal yoki nashr nomini kiriting.',
@@ -113,6 +131,9 @@ class StoreArticleRequest extends FormRequest
             'keywords_ru' => 'rus tilidagi kalit so‘zlar',
             'keywords_en' => 'ingliz tilidagi kalit so‘zlar',
             'type' => 'nashr turi',
+            'field' => 'soha',
+            'journal_id' => 'jurnal',
+            'conference_certificate' => 'konferensiya sertifikati',
             'published_at' => 'chop etilgan sana',
             'journal_name' => 'jurnal yoki nashr nomi',
             'issn' => 'ISSN',

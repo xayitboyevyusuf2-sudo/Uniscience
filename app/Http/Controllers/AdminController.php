@@ -114,19 +114,26 @@ class AdminController extends Controller
         $ok = $r->decision === 'approve';
         $old = $article->only(['status', 'reason', 'journal_id']);
         $j = $article->journal;
-        if ($ok && ! $j) { // moderator matches the journal ("12 · Name"); only the leading id is used
+        $articleType = config('uniscience.article_types.'.$article->type, []);
+        $requiresJournal = ($articleType['family'] ?? 'journal') === 'journal';
+        if ($ok && ! $j && $requiresJournal) { // OAK journal matching still requires moderator selection
             $j = Journal::find((int) $r->journal_pick);
             if (! $j) {
                 return back()->withErrors(['journal_pick' => 'Tasdiqlash uchun jurnalni tanlang.']);
             }
         }
-        $article->update(['status' => $ok ? 'approved' : 'rejected', 'reason' => $ok ? 'Tasdiqlandi (moderator)' : 'Rad etildi: '.$r->note, 'journal_id' => $ok ? $j->id : $article->journal_id]);
-        if ($ok || $r->decision === 'reject') {
-            $article->update(['decided_at' => now(), 'decided_by' => $u->id]);
-        }
-        if ($ok && $article->issn && ! $j->issn && ! Journal::where('issn', $article->issn)->exists()) {
+        $article->update(['status' => $ok ? 'approved' : 'rejected', 'reason' => $ok ? 'Tasdiqlandi (moderator)' : 'Rad etildi: '.$r->note, 'journal_id' => $ok ? $j?->id : $article->journal_id, 'decided_at' => now(), 'decided_by' => $u->id]);
+        if ($ok && $j && $article->issn && ! $j->issn && ! Journal::where('issn', $article->issn)->exists()) {
             $j->update(['issn' => $article->issn]);
         } // the list learns ISSNs
+        if (($articleType['family'] ?? null) === 'conference' && $certificate = $article->conferenceCertificate) {
+            $certificate->update([
+                'status' => $ok ? 'verified' : 'rejected',
+                'note' => $r->note,
+                'verified_by' => $u->id,
+                'verified_at' => now(),
+            ]);
+        }
         AuditLog::record('article.review_decided', $article, $old, $article->only(['status', 'reason', 'journal_id']));
         DB::table('review_logs')->insert(['article_id' => $article->id, 'user_id' => $u->id, 'decision' => $ok ? 'approved' : 'rejected', 'note' => $r->note, 'created_at' => now(), 'updated_at' => now()]);
         try {
