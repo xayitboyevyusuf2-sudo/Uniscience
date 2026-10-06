@@ -40,7 +40,7 @@ class JournalSearchController extends Controller
             })
             ->orderBy('name')
             ->limit(10)
-            ->get(['id', 'name', 'issn', 'field', 'tier']);
+            ->get(['id', 'name', 'issn', 'field', 'tier', 'warning_text']);
 
         return response()->json($journals);
     }

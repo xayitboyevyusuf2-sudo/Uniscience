@@ -7,6 +7,7 @@ use App\Models\Certificate;
 use App\Models\Journal;
 use App\Models\User;
 use App\Services\Scorer;
+use App\Services\Verifier;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -58,6 +59,28 @@ class PageController extends Controller
         $c = Certificate::create(['user_id' => auth()->id(), 'token' => Str::random(24)]);
 
         return redirect("/malumotnoma/{$c->token}");
+    }
+
+    public function journals(Request $r) // read-only reference for any authenticated user (FR-29)
+    {
+        $filters = $r->validate([
+            'q' => ['nullable', 'string', 'max:190'],
+            'field' => ['nullable', 'string', 'max:190'],
+            'tier' => ['nullable', 'string', 'max:1'],
+        ]);
+        $q = Journal::query()->orderBy('name');
+        if ($t = trim((string) ($filters['q'] ?? ''))) {
+            $n = Verifier::norm($t);
+            $q->where(fn ($x) => $x->where('name_norm', 'like', '%'.$n.'%')->orWhere('issn', 'like', '%'.$t.'%'));
+        }
+        if ($f = $filters['field'] ?? null) {
+            $q->where('field', 'like', '%'.$f.'%');
+        }
+        if ($tier = $filters['tier'] ?? null) {
+            $q->where('tier', $tier);
+        }
+
+        return view('journals.index', ['journals' => $q->paginate(25)->withQueryString()]);
     }
 
     public function verify($token) // public, read-only (FR-28)

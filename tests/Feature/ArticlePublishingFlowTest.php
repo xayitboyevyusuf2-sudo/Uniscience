@@ -304,7 +304,7 @@ class ArticlePublishingFlowTest extends TestCase
         $this->actingAs($user)
             ->get('/maqola/'.$article->id)
             ->assertOk()
-            ->assertSee('Ushbu jurnal xavfli jurnallar ro‘yxatida; maqola 0 ball oladi.');
+            ->assertSee('Ushbu jurnal xavfli jurnallar ro‘yxatida. Maqola 0 ball oladi.');
     }
 
     public function test_approved_journal_less_scopus_article_is_visible_and_filterable_in_public_base(): void

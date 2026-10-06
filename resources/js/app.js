@@ -81,6 +81,21 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 document.addEventListener('DOMContentLoaded', () => {
+	const tier = document.querySelector('#tier');
+	const warning = document.querySelector('#warning_text');
+
+	if (!(tier instanceof HTMLSelectElement) || !(warning instanceof HTMLTextAreaElement) || !warning.dataset.tierXWarning) {
+		return;
+	}
+
+	tier.addEventListener('change', () => {
+		if (tier.value === 'X' && warning.value.trim() === '') {
+			warning.value = warning.dataset.tierXWarning;
+		}
+	});
+});
+
+document.addEventListener('DOMContentLoaded', () => {
 	const type = document.querySelector('#type');
 	const sections = document.querySelectorAll('[data-article-family]');
 	const journalName = document.querySelector('#journal_name');
@@ -113,6 +128,9 @@ document.addEventListener('DOMContentLoaded', () => {
 	}
 
 	let searchTimer;
+	if (riskWarning instanceof HTMLElement) {
+		riskWarning.dataset.defaultText = riskWarning.textContent;
+	}
 	journalName.addEventListener('input', () => {
 		journalId.value = '';
 		if (riskWarning) {
@@ -150,6 +168,7 @@ document.addEventListener('DOMContentLoaded', () => {
 						issn.value = journal.issn || '';
 						results.hidden = true;
 						if (riskWarning) {
+							riskWarning.textContent = journal.warning_text || riskWarning.dataset.defaultText || riskWarning.textContent;
 							riskWarning.hidden = journal.tier !== 'X';
 						}
 					});

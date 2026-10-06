@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AdminJournalController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailVerificationController;
@@ -46,6 +47,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/maqola/{article}', [ArticleController::class, 'show'])->middleware('verified');
     Route::get('/maqola/{article}/pdf', [ArticleController::class, 'pdf'])->middleware('verified')->name('articles.pdf');
     Route::post('/malumotnoma', [PageController::class, 'certify'])->middleware('verified');
+    Route::get('/jurnallar', [PageController::class, 'journals'])->name('journals.index');
     Route::get('/moderator/navbat', [ModeratorController::class, 'queue'])->name('moderator.queue');
     Route::get('/moderator/maqola/{article}', [ModeratorController::class, 'show'])->name('moderator.articles.show');
     Route::get('/moderator/maqola/{article}/sertifikat/pdf', [ModeratorController::class, 'certificatePdf'])->name('moderator.certificates.pdf');
@@ -59,4 +61,11 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/foydalanuvchi/{user}/tahrir', [ProfileController::class, 'updateUser']);
     Route::post('/admin/foydalanuvchi/{user}/tasdiq', [AdminController::class, 'approveUser'])->name('admin.users.approval');
     Route::post('/admin/foydalanuvchi/{user}', [AdminController::class, 'role']);
+    Route::get('/admin/jurnallar', [AdminJournalController::class, 'index'])->name('admin.journals.index');
+    Route::get('/admin/jurnallar/yangi', [AdminJournalController::class, 'create'])->name('admin.journals.create');
+    Route::post('/admin/jurnallar/import-json', [AdminJournalController::class, 'importJson'])->name('admin.journals.import-json');
+    Route::post('/admin/jurnallar', [AdminJournalController::class, 'store'])->name('admin.journals.store');
+    Route::get('/admin/jurnallar/{journal}/tahrir', [AdminJournalController::class, 'edit'])->name('admin.journals.edit');
+    Route::post('/admin/jurnallar/{journal}', [AdminJournalController::class, 'update'])->name('admin.journals.update');
+    Route::post('/admin/jurnallar/{journal}/chiqarish', [AdminJournalController::class, 'delist'])->name('admin.journals.delist');
 });

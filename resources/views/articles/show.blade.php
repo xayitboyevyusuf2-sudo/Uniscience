@@ -2,7 +2,7 @@
 @section('content')
 <div class="card"><h1 class="font-serif text-2xl">{{ $article->title }}</h1>
 <p class="text-slate-600">{{ config('uniscience.article_types.'.$article->type.'.label', $article->type) }} · {{ $article->journal_name }} · ISSN {{ $article->issn ?: '—' }} · {{ $article->published_at->format('Y-m-d') }}</p>
-@if($article->journal?->tier==='X')<p class="mt-2 font-semibold text-red-700">Ushbu jurnal xavfli jurnallar ro‘yxatida; maqola 0 ball oladi.</p>@endif
+@if($article->journal?->warningMessage())<p class="mt-2 font-semibold text-red-700">{{ $article->journal->warningMessage() }}</p>@endif
 <p class="mt-2"><b>Holat:</b> @include('partials.status',['s'=>$article->status]) {{ $article->reason }}</p>
 @if($article->pdf_path)<a class="mt-2 inline-block text-sm underline" href="/maqola/{{ $article->id }}/pdf">Maqola PDF fayli</a>@endif
 <div class="mt-4 grid gap-4 md:grid-cols-3"><section><h2 class="font-semibold">Annotatsiya (o‘zbek)</h2><p class="whitespace-pre-line">{{ $article->annotation_uz ?? $article->abstract }}</p><p class="mt-2 text-sm"><b>Kalit so‘zlar:</b> {{ $article->keywords_uz }}</p></section>

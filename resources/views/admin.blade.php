@@ -24,7 +24,7 @@
 @if(auth()->user()->role==='admin')<a class="mt-2 inline-block text-sm underline" href="/admin/foydalanuvchi/{{ $u->id }}/tahrir">Tahrirlash</a>@endif
 @if($u->approval_status==='pending')<div class="flex gap-2 mt-2"><form method="post" action="/admin/foydalanuvchi/{{ $u->id }}/tasdiq">@csrf<input type="hidden" name="decision" value="approve"><button class="btn">Tasdiqlash</button></form><form method="post" action="/admin/foydalanuvchi/{{ $u->id }}/tasdiq">@csrf<input type="hidden" name="decision" value="reject"><button class="btn bg-red-700!">Rad etish</button></form></div>@endif
 </td></tr>@endforeach</table></div>
-<div class="card overflow-x-auto"><h2 class="font-serif text-xl">Jurnallar</h2><table class="w-full text-sm"><tr><th>ISSN</th><th>Nomi</th><th>Soha</th><th>Daraja</th><th>Ro‘yxatda</th></tr>
+<div class="card overflow-x-auto"><div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-serif text-xl">Jurnallar</h2><a class="text-sm underline" href="/admin/jurnallar">Jurnallar ma’lumotnomasi (CRUD)</a></div><table class="w-full text-sm"><tr><th>ISSN</th><th>Nomi</th><th>Soha</th><th>Daraja</th><th>Ro‘yxatda</th></tr>
 @foreach($journals as $j)<tr><td>{{ $j->issn }}</td><td>{{ $j->name }}</td><td>{{ $j->field }}</td><td>{{ $j->tier }}</td><td>{{ $j->listed_from->format('Y-m-d') }} — {{ $j->listed_to?->format('Y-m-d') ?? 'hozirgacha' }}</td></tr>@endforeach</table>{{ $journals->links() }}</div>
 @endif
 @endsection
