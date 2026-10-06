@@ -34,6 +34,16 @@ class User extends Authenticatable implements MustVerifyEmail
         return $this->hasOne(Rating::class);
     }
 
+    public function slots()
+    {
+        return $this->hasMany(TimeSlot::class);
+    }
+
+    public function mentorRequests()
+    {
+        return $this->hasMany(MentorRequest::class, 'student_id');
+    }
+
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordUz($token));

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AdminEditUserRequest;
+use App\Models\MentorRequest;
 use App\Models\User;
 use App\Services\AuditLog;
 use App\Services\RatingService;
@@ -28,7 +29,36 @@ class ProfileController extends Controller
             $rating->refresh();
         }
 
-        return view('profile.show', ['u' => $user, 's' => $s, 'rows' => collect($s['rows'])->values(), 'rating' => $rating]);
+        return view('profile.show', ['u' => $user, 's' => $s, 'rows' => collect($s['rows'])->values(), 'rating' => $rating] + $this->mentoringData($user));
+    }
+
+    /** @return array<string, mixed> */
+    private function mentoringData(User $user): array
+    {
+        $viewer = auth()->user();
+        $data = ['sentRequests' => collect(), 'scheduledMeetings' => collect(), 'mentorSlots' => collect(), 'incomingRequests' => collect()];
+
+        if (in_array($user->category, ['bakalavr', 'magistr', 'tadqiqotchi'], true)) {
+            $data['sentRequests'] = $user->mentorRequests()->with('slot.mentor')->latest()->get();
+        }
+        if ($user->isMentor()) {
+            $data['mentorSlots'] = $user->slots()->withCount('requests')->whereDate('slot_date', '>=', now()->toDateString())->orderBy('slot_date')->orderBy('start_time')->get();
+            if ($viewer->id === $user->id) {
+                $data['incomingRequests'] = MentorRequest::query()->whereHas('slot', fn ($q) => $q->where('user_id', $user->id))
+                    ->with(['student.rating', 'slot'])->where('status', 'pending')->oldest()->get();
+            }
+        }
+        $scheduledQuery = MentorRequest::query()->where('status', 'accepted')
+            ->whereHas('slot', fn ($q) => $q->whereDate('slot_date', '>=', now()->toDateString()))
+            ->with(['slot.mentor', 'student']);
+        if ($user->isMentor()) {
+            $scheduledQuery->whereHas('slot', fn ($q) => $q->where('user_id', $user->id));
+        } else {
+            $scheduledQuery->where('student_id', $user->id);
+        }
+        $data['scheduledMeetings'] = $scheduledQuery->oldest('responded_at')->get();
+
+        return $data;
     }
 
     public function edit(): View
