@@ -28,8 +28,8 @@ class Verifier
             return ['manual', 'Jurnal nomi ma’lumotnomadagi nom bilan mos kelmadi', $j];
         }
         $m = Article::where('user_id', $a->user_id)->where('created_at', '>=', now()->startOfMonth())->count();
-        if ($m >= 5) {
-            return ['manual', 'Bir oyda 5+ maqola yuklandi', $j];
+        if ($m >= ScoringConfig::monthlyFlagThreshold()) {
+            return ['manual', 'Bir oyda '.ScoringConfig::monthlyFlagThreshold().'+ maqola yuklandi', $j];
         }
 
         return ['approved', 'Tasdiqlandi'.($j->tier === 'X' ? ' (ogohlantirish: xavfli jurnal, 0 ball)' : ''), $j];

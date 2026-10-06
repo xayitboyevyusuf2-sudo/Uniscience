@@ -11,6 +11,8 @@ use App\Notifications\AccountApproved;
 use App\Services\ArticleDecisionService;
 use App\Services\AuditLog;
 use App\Services\JournalImporter;
+use App\Services\RatingService;
+use App\Services\ScoringConfig;
 use App\Services\Verifier;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -48,7 +50,10 @@ class AdminController extends Controller
 
         return view('admin', ['queue' => $queue, 'suggest' => $suggest, 'all' => count($suggest) ? Journal::orderBy('name')->get(['id', 'name']) : collect(),
             'journals' => Journal::orderBy('name')->paginate(25), 'users' => $users, 'facultyAssignments' => $facultyAssignments, 'facultyOptions' => $facultyOptions,
-            'limit' => Setting::get('yearly_limit', config('uniscience.yearly_limit')), 'log' => DB::table('setting_changes')->latest('id')->take(5)->get()]);
+            'limit' => Setting::get('yearly_limit', config('uniscience.yearly_limit')), 'log' => DB::table('setting_changes')->latest('id')->take(5)->get(),
+            'scoring' => ScoringConfig::all(),
+            'scoringDefaults' => ['tier' => config('uniscience.tiers'), 'position' => config('uniscience.positions'), 'date' => ['y1' => 1.0, 'y2' => 0.8, 'y3' => 0.6, 'older' => 0.4], 'field' => ['same' => 1.0, 'related' => 0.7, 'other' => 0.5], 'yearly_limit' => config('uniscience.yearly_limit'), 'diversity_factor' => 0.8, 'monthly_flag_threshold' => 5],
+            'scoringHistory' => DB::table('setting_changes')->leftJoin('users', 'users.id', '=', 'setting_changes.user_id')->select('setting_changes.*', 'users.name as user_name')->latest('setting_changes.id')->take(25)->get()]);
     }
 
     public function audit(Request $request): View
@@ -167,6 +172,56 @@ class AdminController extends Controller
         AuditLog::record('settings.yearly_limit_updated', null, ['yearly_limit' => $oldLimit], ['yearly_limit' => (int) $r->yearly_limit]);
 
         return back()->with('ok', 'Saqlandi');
+    }
+
+    public function scoring(Request $r)
+    {
+        $this->guard(['admin']);
+        $defaults = config('uniscience');
+        $rules = [];
+        foreach (array_keys($defaults['tiers']) as $tier) {
+            $rules['tier.'.$tier] = ['nullable', 'numeric', 'between:0,100'];
+        }
+        foreach (array_keys($defaults['positions']) as $position) {
+            $rules['position.'.$position] = ['nullable', 'numeric', 'between:0,1'];
+        }
+        foreach (['y1', 'y2', 'y3', 'older'] as $key) {
+            $rules['date.'.$key] = ['nullable', 'numeric', 'between:0,1'];
+        }
+        foreach (['same', 'related', 'other'] as $key) {
+            $rules['field.'.$key] = ['nullable', 'numeric', 'between:0,1'];
+        }
+        $rules['yearly_limit'] = ['nullable', 'integer', 'min:1', 'max:50'];
+        $rules['diversity_factor'] = ['nullable', 'numeric', 'between:0,1'];
+        $rules['monthly_flag_threshold'] = ['nullable', 'integer', 'min:1', 'max:100'];
+        $data = $r->validate($rules);
+        $flat = [];
+        foreach ($data as $key => $value) {
+            if (is_array($value)) {
+                foreach ($value as $sub => $v) {
+                    $flat[$key.'.'.$sub] = $v;
+                }
+            } else {
+                $flat[$key] = $value;
+            }
+        }
+
+        $changed = [];
+        foreach ($flat as $key => $value) {
+            $value = $value === null || $value === '' ? null : (is_numeric($value) ? $value + 0 : $value);
+            $old = Setting::get($key);
+            if ($value === null || (string) $old === (string) $value) {
+                continue;
+            }
+            Setting::put($key, $value, auth()->id());
+            $changed[$key] = [$old, $value];
+        }
+        if ($changed) {
+            AuditLog::record('settings.scoring_updated', null, array_map(fn ($pair) => $pair[0], $changed), array_map(fn ($pair) => $pair[1], $changed));
+            RatingService::recalculateAll();
+        }
+
+        return back()->with('ok', $changed ? 'Koeffitsientlar saqlandi va reytinglar qayta hisoblandi.' : 'O‘zgarish yo‘q.');
     }
 
     public function role(Request $r, User $user)

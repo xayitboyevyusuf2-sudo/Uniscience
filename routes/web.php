@@ -3,7 +3,9 @@
 use App\Http\Controllers\AdminContentController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AdminJournalController;
+use App\Http\Controllers\AdminJournalRequestController;
 use App\Http\Controllers\AdminNewsController;
+use App\Http\Controllers\AdminUserController;
 use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailVerificationController;
@@ -96,6 +98,17 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/audit', [AdminController::class, 'audit'])->name('admin.audit');
     Route::post('/admin/qaror/{article}', [AdminController::class, 'decide']);
     Route::post('/admin/import', [AdminController::class, 'import']);
+    Route::post('/admin/sozlamalar/koeffitsientlar', [AdminController::class, 'scoring'])->name('admin.scoring');
+    Route::get('/admin/foydalanuvchilar', [AdminUserController::class, 'index'])->name('admin.users.index');
+    Route::post('/admin/foydalanuvchilar/xodim', [AdminUserController::class, 'storeStaff'])->name('admin.users.staff');
+    Route::get('/admin/jurnal-arizalari', [AdminJournalRequestController::class, 'index'])->name('admin.journal-requests.index');
+    Route::post('/admin/jurnal-arizalari/{journalRequest}/hal', [AdminJournalRequestController::class, 'resolve'])->name('admin.journal-requests.resolve');
+    Route::post('/admin/jurnal-arizalari/{journalRequest}/rad', [AdminJournalRequestController::class, 'reject'])->name('admin.journal-requests.reject');
+    Route::get('/admin/ochirish-sorovlari', function () {
+        abort_unless(auth()->user()->isAdmin(), 403);
+
+        return view('admin.delete-requests');
+    })->name('admin.delete-requests');
     Route::post('/admin/sozlamalar', [AdminController::class, 'settings']);
     Route::get('/admin/foydalanuvchi/{user}/tahrir', [ProfileController::class, 'editUser']);
     Route::post('/admin/foydalanuvchi/{user}/tahrir', [ProfileController::class, 'updateUser']);
