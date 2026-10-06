@@ -25,6 +25,11 @@
 @forelse($rows as $row)<tr><td>{{ $row->name }}</td><td>{{ $row->faculty }}</td><td>{{ number_format((float) $row->score, 2) }}</td></tr>@empty<tr><td colspan="3" class="text-slate-500">—</td></tr>@endforelse</table>
 @endforeach</section>
 </div>
+<div class="grid gap-4 lg:grid-cols-3">
+<section class="card"><h2 class="font-serif text-lg">Toifa bo‘yicha</h2><table class="w-full text-sm"><tr><th>Toifa</th><th>Tasdiqlangan</th></tr>@foreach(['bakalavr' => 'Bakalavr', 'magistr' => 'Magistr', 'tadqiqotchi' => 'Tadqiqotchi', 'professor' => 'Professor'] as $key => $label)<tr><td>{{ $label }}</td><td>{{ $byCategory[$key] ?? 0 }}</td></tr>@endforeach</table></section>
+<section class="card"><h2 class="font-serif text-lg">Kafedra bo‘yicha</h2><table class="w-full text-sm"><tr><th>Kafedra</th><th>Tasdiqlangan</th></tr>@forelse($byDepartment as $department => $count)<tr><td>{{ $department }}</td><td>{{ $count }}</td></tr>@empty<tr><td colspan="2" class="text-slate-500">—</td></tr>@endforelse</table></section>
+<section class="card"><h2 class="font-serif text-lg">Kurs bo‘yicha</h2><table class="w-full text-sm"><tr><th>Kurs</th><th>Tasdiqlangan</th></tr>@forelse($byCourse as $course => $count)<tr><td>{{ $course }}-kurs</td><td>{{ $count }}</td></tr>@empty<tr><td colspan="2" class="text-slate-500">—</td></tr>@endforelse</table></section>
+</div>
 </div>
 @push('scripts')
 @vite('resources/js/dashboard.js')

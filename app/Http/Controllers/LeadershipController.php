@@ -53,6 +53,21 @@ class LeadershipController extends Controller
                     fputcsv($out, [$row->name, $row->faculty, $row->score, $row->rank_faculty, $row->rank_university]);
                 }
             }
+            fputcsv($out, []);
+            fputcsv($out, ['Toifa', 'Tasdiqlangan']);
+            foreach (['bakalavr' => 'Bakalavr', 'magistr' => 'Magistr', 'tadqiqotchi' => 'Tadqiqotchi', 'professor' => 'Professor'] as $key => $label) {
+                fputcsv($out, [$label, $data['byCategory'][$key] ?? 0]);
+            }
+            fputcsv($out, []);
+            fputcsv($out, ['Kafedra', 'Tasdiqlangan']);
+            foreach ($data['byDepartment'] as $department => $count) {
+                fputcsv($out, [$department, $count]);
+            }
+            fputcsv($out, []);
+            fputcsv($out, ['Kurs', 'Tasdiqlangan']);
+            foreach ($data['byCourse'] as $course => $count) {
+                fputcsv($out, [$course.'-kurs', $count]);
+            }
             fclose($out);
         }, 'rahbariyat.csv', ['Content-Type' => 'text/csv; charset=UTF-8']);
     }

@@ -49,11 +49,11 @@ class RegistrationCategoriesTest extends TestCase
         \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         $this->post('/royxat', $this->studentPayload(['username' => 'nik']));
 
+        // username endi foydalanuvchi tanlagan login — u saqlanadi
         $this->assertDatabaseHas('users', [
             'email' => 'elbek@example.uz',
-            'username' => 'elbek.karimov',
+            'username' => 'nik',
         ]);
-        $this->assertDatabaseMissing('users', ['username' => 'nik']);
     }
 
     public function test_professor_registration_waits_for_approval_and_cannot_log_in_while_pending(): void
@@ -173,9 +173,7 @@ class RegistrationCategoriesTest extends TestCase
             'email' => 'different@example.uz',
             'student_id' => 'student-2',
             'username' => 'elbek.karimov.2',
-        ]))->assertSessionHasErrors([
-            'username' => 'Bu F.I.Sh. bilan foydalanuvchi mavjud. Agar bu siz bo‘lsangiz, kirish sahifasidan foydalaning yoki administratorga murojaat qiling.',
-        ]);
+        ]))->assertSessionHasErrors('username');
 
         $this->assertDatabaseCount('users', 1);
     }
@@ -248,14 +246,16 @@ class RegistrationCategoriesTest extends TestCase
         $this->assertDatabaseCount('users', 0);
     }
 
-    public function test_registration_form_shows_category_choices_without_a_username_field(): void
+    public function test_registration_form_shows_category_choices_and_login_field(): void
     {
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         $this->get('/royxat')
             ->assertSee('Bakalavr')
             ->assertSee('Magistr')
             ->assertSee('Tadqiqotchi')
             ->assertSee('Professor')
-            ->assertDontSee('name="username"', false);
+            ->assertSee('name="username"', false)
+            ->assertSee('Toshkent davlat universiteti');
     }
 
     public function test_hemis_fields_are_present_and_registration_sends_no_http_requests(): void

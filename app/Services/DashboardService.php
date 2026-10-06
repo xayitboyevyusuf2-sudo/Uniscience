@@ -67,6 +67,32 @@ class DashboardService
             ->orderByDesc('ratings.score')->limit(10)
             ->get(['users.name', 'users.faculty', 'ratings.score', 'ratings.rank_faculty', 'ratings.rank_university']);
 
+        $byCategory = DB::table('articles')->join('users', 'users.id', '=', 'articles.user_id')
+            ->where('articles.status', 'approved')
+            ->whereBetween('articles.decided_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->when($faculty, fn ($q) => $q->where('users.faculty', $faculty))
+            ->groupBy('users.category')
+            ->selectRaw('users.category as category, COUNT(*) as count')
+            ->pluck('count', 'category');
+
+        $byDepartment = DB::table('articles')->join('users', 'users.id', '=', 'articles.user_id')
+            ->where('articles.status', 'approved')
+            ->whereBetween('articles.decided_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->when($faculty, fn ($q) => $q->where('users.faculty', $faculty))
+            ->whereNotNull('users.department')
+            ->groupBy('users.department')
+            ->selectRaw('users.department as department, COUNT(*) as count')
+            ->pluck('count', 'department');
+
+        $byCourse = DB::table('articles')->join('users', 'users.id', '=', 'articles.user_id')
+            ->where('articles.status', 'approved')
+            ->whereBetween('articles.decided_at', [$from->copy()->startOfDay(), $to->copy()->endOfDay()])
+            ->when($faculty, fn ($q) => $q->where('users.faculty', $faculty))
+            ->whereNotNull('users.course')
+            ->groupBy('users.course')
+            ->selectRaw('users.course as course, COUNT(*) as count')
+            ->pluck('count', 'course');
+
         return [
             'period' => $period, 'month' => $month, 'year' => $year, 'faculty' => $faculty,
             'from' => $from->toDateString(), 'to' => $to->toDateString(),
@@ -77,6 +103,9 @@ class DashboardService
             'topMasters' => $top('magistr'),
             'topProfessors' => $top('professor'),
             'faculties' => DB::table('users')->whereNotNull('faculty')->where('faculty', '!=', '')->distinct()->orderBy('faculty')->pluck('faculty'),
+            'byCategory' => $byCategory,
+            'byDepartment' => $byDepartment,
+            'byCourse' => $byCourse,
         ];
     }
 

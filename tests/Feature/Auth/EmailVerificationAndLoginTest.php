@@ -3,11 +3,9 @@
 namespace Tests\Feature\Auth;
 
 use App\Models\User;
-use App\Notifications\VerifyEmailUz;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
 class EmailVerificationAndLoginTest extends TestCase
@@ -62,40 +60,23 @@ class EmailVerificationAndLoginTest extends TestCase
             ->assertSessionHasErrors(['login' => 'Login yoki parol noto‘g‘ri.']);
     }
 
-    public function test_unverified_user_is_redirected_from_upload_to_email_verification(): void
+    public function test_unverified_user_can_upload_without_email_verification(): void
     {
         $user = User::factory()->unverified()->create();
 
         $this->actingAs($user)
             ->get('/yuklash')
-            ->assertRedirect('/email/tasdiqlash');
+            ->assertOk();
     }
 
-    public function test_signed_verification_link_marks_email_verified_and_opens_profile(): void
+    public function test_email_verification_route_is_removed(): void
     {
-        $user = User::factory()->unverified()->create();
-        $verificationUrl = (new VerifyEmailUz)->toMail($user)->actionUrl;
-
-        $this->actingAs($user)
-            ->get($verificationUrl)
-            ->assertRedirect('/profil');
-
-        $this->assertNotNull($user->fresh()->email_verified_at);
-        $this->get('/profil')->assertOk();
+        $this->get('/email/tasdiqlash/1/abc')->assertNotFound();
     }
 
-    public function test_authenticated_user_can_resend_verification_email_with_throttling(): void
+    public function test_resend_verification_endpoint_is_removed(): void
     {
-        Notification::fake([VerifyEmailUz::class]);
-        $user = User::factory()->unverified()->create();
-        $this->actingAs($user);
-
-        for ($attempt = 0; $attempt < 6; $attempt++) {
-            $this->post('/email/tasdiqlash')->assertRedirect();
-        }
-
-        $this->post('/email/tasdiqlash')->assertTooManyRequests();
-        Notification::assertSentTo($user, VerifyEmailUz::class);
+        $this->post('/email/tasdiqlash')->assertNotFound();
     }
 
     public function test_remember_cookie_expires_after_thirty_days(): void

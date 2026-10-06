@@ -26,7 +26,7 @@ class AcceptanceTest extends TestCase
     // TS-01: registration with consent — no email verification
     public function test_ts01_registration_consent_and_email_verification_link(): void
     {
-        \App\Models\University::create(['name' => 'TATU']);
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         $this->post('/royxat', $this->registerPayload())->assertRedirect('/portfel');
         $user = User::where('email', 'ts01@example.uz')->firstOrFail();
         $this->assertNotNull($user->consent_at);
@@ -172,7 +172,7 @@ class AcceptanceTest extends TestCase
         $leader = User::factory()->create(['role' => 'rahbariyat']);
         $journal = Journal::create(['name' => 'TS22 jurnali', 'field' => 'Iqtisodiyot', 'tier' => 'D', 'listed_from' => '2019-01-01']);
 
-        \App\Models\University::create(['name' => 'TATU']);
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         $this->post('/royxat', $this->registerPayload())->assertRedirect('/portfel');
         $user = User::where('email', 'ts01@example.uz')->firstOrFail();
 

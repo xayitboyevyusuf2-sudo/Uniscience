@@ -46,13 +46,18 @@ class RegisterRequest extends FormRequest
         ];
     }
 
-    protected function prepareForValidation(): void
+    public function after(): array
     {
-        // The username field is authoritative; ignore any stray 'username' from other sources.
-        $this->merge(['username' => $this->input('username')]);
-    }
+        return [function (ValidationValidator $validator): void {
+            if ($validator->errors()->hasAny(['last_name', 'first_name', 'patronymic'])) {
+                return;
+            }
 
-    public function messages(): array
+            $fullName = trim($this->input('last_name').' '.$this->input('first_name').' '.$this->input('patronymic'));
+
+            if (User::whereRaw('LOWER(username) = ?', [Str::lower($fullName)])->exists()) {
+                $validator->errors()->add('username', 'Bu F.I.Sh. bilan foydalanuvchi mavjud. Agar bu siz bo‘lsangiz, kirish sahifasidan foydalaning yoki administratorga murojaat qiling.');
+            }
     {
         return [
             'required' => ':attribute maydoni majburiy.',
@@ -74,6 +79,7 @@ class RegisterRequest extends FormRequest
             'last_name.required' => 'Familiyani kiriting.',
             'patronymic.required' => 'Otasining ismini kiriting.',
             'university.required' => 'OTM nomini kiriting.',
+            'university.exists' => 'Tanlangan OTM ro‘yxatda mavjud emas.',
             'direction.required' => 'Yo‘nalishni tanlang.',
             'direction.in' => 'Tanlangan yo‘nalish ro‘yxatda mavjud emas.',
             'faculty.required' => 'Fakultetni kiriting.',
@@ -93,6 +99,9 @@ class RegisterRequest extends FormRequest
             'email.required' => 'Email manzilini kiriting.',
             'email.email' => 'Email manzili noto‘g‘ri.',
             'email.unique' => 'Bu email bilan foydalanuvchi mavjud.',
+            'username.required' => 'Loginni kiriting.',
+            'username.unique' => 'Bu login allaqachon band.',
+            'username.regex' => 'Login faqat harf, raqam, nuqta, pastki chiziq va tire bo‘lishi mumkin.',
             'password.required' => 'Parolni kiriting.',
             'password.confirmed' => 'Parollar mos kelmadi.',
             'password.min' => 'Parol kamida 8 belgidan iborat bo‘lishi kerak.',
@@ -121,23 +130,10 @@ class RegisterRequest extends FormRequest
             'position_title' => 'lavozim',
             'department' => 'kafedra yoki bo‘lim',
             'email' => 'email',
+            'username' => 'login',
             'password' => 'parol',
             'consent' => 'rozilik',
         ];
     }
-
-    public function after(): array
-    {
-        return [function (ValidationValidator $validator): void {
-            if ($validator->errors()->hasAny(['last_name', 'first_name', 'patronymic', 'username'])) {
-                return;
-            }
-
-            $username = trim($this->input('last_name').' '.$this->input('first_name').' '.$this->input('patronymic'));
-
-            if (User::whereRaw('LOWER(username) = ?', [Str::lower($username)])->exists()) {
-                $validator->errors()->add('username', 'Bu F.I.Sh. bilan foydalanuvchi mavjud. Agar bu siz bo‘lsangiz, kirish sahifasidan foydalaning yoki administratorga murojaat qiling.');
-            }
-        }];
-    }
 }
+

@@ -24,4 +24,13 @@ th { background: #e2e8f0; }
 <table><tr><th>Ism</th><th>Fakultet</th><th>Ball</th></tr>
 @foreach($rows as $row)<tr><td>{{ $row->name }}</td><td>{{ $row->faculty }}</td><td>{{ number_format((float) $row->score, 2) }}</td></tr>@endforeach</table>
 @endforeach
+<h2>Toifa bo‘yicha</h2>
+<table><tr><th>Toifa</th><th>Tasdiqlangan</th></tr>
+@foreach(['bakalavr' => 'Bakalavr', 'magistr' => 'Magistr', 'tadqiqotchi' => 'Tadqiqotchi', 'professor' => 'Professor'] as $key => $label)<tr><td>{{ $label }}</td><td>{{ $byCategory[$key] ?? 0 }}</td></tr>@endforeach</table>
+<h2>Kafedra bo‘yicha</h2>
+<table><tr><th>Kafedra</th><th>Tasdiqlangan</th></tr>
+@foreach($byDepartment as $department => $count)<tr><td>{{ $department }}</td><td>{{ $count }}</td></tr>@endforeach</table>
+<h2>Kurs bo‘yicha</h2>
+<table><tr><th>Kurs</th><th>Tasdiqlangan</th></tr>
+@foreach($byCourse as $course => $count)<tr><td>{{ $course }}-kurs</td><td>{{ $count }}</td></tr>@endforeach</table>
 </body></html>
