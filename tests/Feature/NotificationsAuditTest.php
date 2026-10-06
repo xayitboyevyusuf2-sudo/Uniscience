@@ -36,17 +36,31 @@ class NotificationsAuditTest extends TestCase
     public function test_role_change_records_old_and_new_values_in_audit_log(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $user = User::factory()->create(['role' => 'student', 'blocked' => false]);
+        $user = User::factory()->create(['role' => 'student', 'blocked' => false, 'faculty' => 'Faculty A']);
 
         $this->actingAs($admin)
-            ->post("/admin/foydalanuvchi/{$user->id}", ['role' => 'moderator', 'blocked' => 1])
+            ->post("/admin/foydalanuvchi/{$user->id}", [
+                'role' => 'moderator',
+                'blocked' => 1,
+                'faculty_ids' => ['Faculty A'],
+            ])
             ->assertSessionHas('ok', 'Yangilandi');
 
         $entry = DB::table('audit_logs')->where('action', 'user.role_or_block_updated')->first();
 
         $this->assertNotNull($entry);
-        $this->assertSame(['role' => 'student', 'blocked' => false], json_decode($entry->old, true));
-        $this->assertSame(['role' => 'moderator', 'blocked' => true], json_decode($entry->new, true));
+        $this->assertSame([
+            'role' => 'student',
+            'blocked' => false,
+            'faculty' => 'Faculty A',
+            'moderator_faculties' => [],
+        ], json_decode($entry->old, true));
+        $this->assertSame([
+            'role' => 'moderator',
+            'blocked' => true,
+            'faculty' => 'Faculty A',
+            'moderator_faculties' => ['Faculty A'],
+        ], json_decode($entry->new, true));
         $this->assertSame($admin->id, $entry->user_id);
     }
 

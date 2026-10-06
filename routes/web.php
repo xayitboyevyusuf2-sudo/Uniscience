@@ -5,6 +5,7 @@ use App\Http\Controllers\ArticleController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\JournalSearchController;
+use App\Http\Controllers\ModeratorController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PasswordController;
@@ -14,7 +15,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/reyting', [PageController::class, 'rating']);
 Route::get('/baza', [PageController::class, 'base']);
-Route::get('/api/jurnallar/qidiruv', JournalSearchController::class)->middleware(['auth', 'throttle:60,1'])->name('journals.search');
 Route::get('/api/jurnallar/qidiruv', JournalSearchController::class)->middleware(['auth', 'throttle:60,1'])->name('journals.search');
 Route::get('/malumotnoma/{token}', [PageController::class, 'verify']);
 Route::middleware('guest')->group(function () {
@@ -44,7 +44,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/yuklash', [ArticleController::class, 'create'])->middleware('verified');
     Route::post('/yuklash', [ArticleController::class, 'store'])->middleware(['verified', 'throttle:20,1']);
     Route::get('/maqola/{article}', [ArticleController::class, 'show'])->middleware('verified');
+    Route::get('/maqola/{article}/pdf', [ArticleController::class, 'pdf'])->middleware('verified')->name('articles.pdf');
     Route::post('/malumotnoma', [PageController::class, 'certify'])->middleware('verified');
+    Route::get('/moderator/navbat', [ModeratorController::class, 'queue'])->name('moderator.queue');
+    Route::get('/moderator/maqola/{article}', [ModeratorController::class, 'show'])->name('moderator.articles.show');
+    Route::get('/moderator/maqola/{article}/sertifikat/pdf', [ModeratorController::class, 'certificatePdf'])->name('moderator.certificates.pdf');
+    Route::post('/moderator/maqola/{article}/sertifikat', [ModeratorController::class, 'certificateDecision'])->name('moderator.certificates.decision');
     Route::get('/admin', [AdminController::class, 'index']);
     Route::get('/admin/audit', [AdminController::class, 'audit'])->name('admin.audit');
     Route::post('/admin/qaror/{article}', [AdminController::class, 'decide']);

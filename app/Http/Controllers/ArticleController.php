@@ -10,9 +10,10 @@ use App\Models\User;
 use App\Notifications\ArticleStatus;
 use App\Notifications\ArticleSubmitted;
 use App\Services\Scorer;
-use App\Services\Verifier;
+use App\Services\Verification\VerificationAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -36,7 +37,7 @@ class ArticleController extends Controller
         ]);
     }
 
-    public function store(StoreArticleRequest $request): RedirectResponse
+    public function store(StoreArticleRequest $request, VerificationAdapter $verifier): RedirectResponse
     {
         $data = $request->validated();
         $type = config('uniscience.article_types.'.$data['type']);
@@ -107,7 +108,10 @@ class ArticleController extends Controller
                 $journalRequestRequired = true;
                 $journalRequestNote = 'Foydalanuvchi jurnal ro‘yxatda yo‘qligini belgiladi.';
             } else {
-                [$status, $reason, $journal] = Verifier::run($article, $hint);
+                $verification = $verifier->verify($article, $family === 'journal' ? $hint : null);
+                $status = $verification->status;
+                $reason = $verification->reason;
+                $journal = $verification->journal;
                 if ($status === 'manual' && str_contains($reason, 'Jurnal OAK ro‘yxatidan topilmadi')) {
                     $journalRequestRequired = true;
                     $journalRequestNote = $reason;
@@ -161,10 +165,25 @@ class ArticleController extends Controller
     public function show(Article $article): View
     {
         $user = auth()->user();
-        abort_unless($article->user_id === $user->id || $user->role === 'admin' || ($user->role === 'moderator' && $article->user->faculty === $user->faculty), 403);
+        abort_unless($article->user_id === $user->id || $user->isAdmin() || $user->canReviewFaculty($article->user->faculty), 403);
         $article->load('authors');
         $row = Scorer::for($article->user)['rows'][$article->id] ?? null;
+        $reviewHistory = DB::table('review_logs')
+            ->leftJoin('users', 'users.id', '=', 'review_logs.user_id')
+            ->where('review_logs.article_id', $article->id)
+            ->orderByDesc('review_logs.created_at')
+            ->orderByDesc('review_logs.id')
+            ->get(['review_logs.*', 'users.name as reviewer_name']);
 
-        return view('articles.show', compact('article', 'row'));
+        return view('articles.show', compact('article', 'row', 'reviewHistory'));
+    }
+
+    public function pdf(Article $article)
+    {
+        $user = auth()->user();
+        abort_unless($article->user_id === $user->id || $user->isAdmin() || $user->canReviewFaculty($article->user->faculty), 403);
+        abort_unless($article->pdf_path && Storage::disk('local')->exists($article->pdf_path), 404);
+
+        return response()->file(Storage::disk('local')->path($article->pdf_path), ['Content-Type' => 'application/pdf']);
     }
 }

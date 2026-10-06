@@ -241,7 +241,7 @@ class ArticlePublishingFlowTest extends TestCase
             ->assertSee('data-add-author', false);
     }
 
-    public function test_moderator_approval_updates_conference_certificate_state(): void
+    public function test_conference_article_cannot_be_approved_until_its_certificate_is_verified(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         $user = User::factory()->create(['direction' => 'Iqtisodiyot']);
@@ -254,11 +254,24 @@ class ArticlePublishingFlowTest extends TestCase
 
         $this->actingAs($admin)
             ->post('/admin/qaror/'.$article->id, ['decision' => 'approve'])
-            ->assertSessionHas('ok');
+            ->assertSessionHasErrors(['conference_certificate']);
+
+        $this->assertSame('manual', $article->fresh()->status);
+        $this->assertSame('pending', $certificate->fresh()->status);
+
+        $this->actingAs($admin)
+            ->post('/moderator/maqola/'.$article->id.'/sertifikat', ['decision' => 'verify'])
+            ->assertRedirect();
 
         $this->assertSame('verified', $certificate->fresh()->status);
         $this->assertSame($admin->id, $certificate->fresh()->verified_by);
         $this->assertNotNull($certificate->fresh()->verified_at);
+
+        $this->assertSame('verified', $certificate->fresh()->status);
+        $this->actingAs($admin)
+            ->post('/admin/qaror/'.$article->id, ['decision' => 'approve'])
+            ->assertSessionHas('ok');
+        $this->assertSame('approved', $article->fresh()->status);
     }
 
     public function test_article_form_contains_type_family_sections_for_conditional_fields(): void

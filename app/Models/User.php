@@ -8,6 +8,8 @@ use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable implements MustVerifyEmail
 {
@@ -65,5 +67,20 @@ class User extends Authenticatable implements MustVerifyEmail
     public function isLeadership(): bool
     {
         return $this->role === 'rahbariyat';
+    }
+
+    public function moderatorFacultyNames(): Collection
+    {
+        return DB::table('moderator_faculties')->where('user_id', $this->getKey())->pluck('faculty');
+    }
+
+    public function canReviewFaculty(?string $faculty): bool
+    {
+        if ($this->isAdmin()) {
+            return true;
+        }
+
+        return $this->isModerator() && $faculty !== null
+            && DB::table('moderator_faculties')->where('user_id', $this->getKey())->where('faculty', $faculty)->exists();
     }
 }

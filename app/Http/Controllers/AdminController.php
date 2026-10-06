@@ -8,13 +8,14 @@ use App\Models\Journal;
 use App\Models\Setting;
 use App\Models\User;
 use App\Notifications\AccountApproved;
-use App\Notifications\ArticleStatus;
+use App\Services\ArticleDecisionService;
 use App\Services\AuditLog;
 use App\Services\JournalImporter;
 use App\Services\Verifier;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class AdminController extends Controller
 {
@@ -29,7 +30,8 @@ class AdminController extends Controller
         $u = auth()->user();
         $q = Article::with(['user', 'journal'])->where('status', 'manual');
         if ($u->role === 'moderator') {
-            $q->whereHas('user', fn ($x) => $x->where('faculty', $u->faculty));
+            $faculties = $u->moderatorFacultyNames();
+            $q->whereHas('user', fn ($x) => $x->whereIn('faculty', $faculties));
         }
         $queue = $q->get();
         $suggest = [];
@@ -40,8 +42,12 @@ class AdminController extends Controller
             }
         }
 
+        $users = User::where('approval_status', 'pending')->latest()->get()->concat(User::where('approval_status', '!=', 'pending')->latest()->take(30)->get());
+        $facultyAssignments = DB::table('moderator_faculties')->get()->groupBy('user_id')->map(fn ($rows) => $rows->pluck('faculty')->all());
+        $facultyOptions = User::query()->whereNotNull('faculty')->where('faculty', '!=', '')->distinct()->orderBy('faculty')->pluck('faculty');
+
         return view('admin', ['queue' => $queue, 'suggest' => $suggest, 'all' => count($suggest) ? Journal::orderBy('name')->get(['id', 'name']) : collect(),
-            'journals' => Journal::orderBy('name')->paginate(25), 'users' => User::where('approval_status', 'pending')->latest()->get()->concat(User::where('approval_status', '!=', 'pending')->latest()->take(30)->get()),
+            'journals' => Journal::orderBy('name')->paginate(25), 'users' => $users, 'facultyAssignments' => $facultyAssignments, 'facultyOptions' => $facultyOptions,
             'limit' => Setting::get('yearly_limit', config('uniscience.yearly_limit')), 'log' => DB::table('setting_changes')->latest('id')->take(5)->get()]);
     }
 
@@ -104,42 +110,38 @@ class AdminController extends Controller
         return back()->with('ok', $approved ? 'Foydalanuvchi tasdiqlandi.' : 'Foydalanuvchi rad etildi.');
     }
 
-    public function decide(Request $r, Article $article)
+    public function decide(Request $r, Article $article, ArticleDecisionService $decisionService)
     {
         $this->guard();
         $u = auth()->user();
-        abort_unless($u->role === 'admin' || $article->user->faculty === $u->faculty, 403);
+        abort_unless($u->isAdmin() || $u->canReviewFaculty($article->user->faculty), 403);
         abort_unless($article->status === 'manual', 422);
-        $r->validate(['decision' => 'required|in:approve,reject', 'note' => 'required_if:decision,reject|nullable|string|max:500']);
-        $ok = $r->decision === 'approve';
-        $old = $article->only(['status', 'reason', 'journal_id']);
-        $j = $article->journal;
-        $articleType = config('uniscience.article_types.'.$article->type, []);
-        $requiresJournal = ($articleType['family'] ?? 'journal') === 'journal';
-        if ($ok && ! $j && $requiresJournal) { // OAK journal matching still requires moderator selection
-            $j = Journal::find((int) $r->journal_pick);
-            if (! $j) {
-                return back()->withErrors(['journal_pick' => 'Tasdiqlash uchun jurnalni tanlang.']);
-            }
+        $r->validate([
+            'decision' => ['required', 'in:approve,reject'],
+            'note' => ['required_if:decision,reject', 'nullable', 'string', 'max:500'],
+            'field' => ['nullable', Rule::in(config('uniscience.fields'))],
+            'pdf_title_matches' => ['nullable', 'boolean'],
+            'author_positions_checked' => ['nullable', 'boolean'],
+        ]);
+
+        $error = $decisionService->decide(
+            $article,
+            $u,
+            $r->decision,
+            $r->note,
+            $r->journal_pick,
+            $r->field,
+            [
+                'pdf_title_matches' => $r->boolean('pdf_title_matches'),
+                'author_positions_checked' => $r->boolean('author_positions_checked'),
+            ],
+        );
+
+        if ($error === 'journal_pick') {
+            return back()->withErrors(['journal_pick' => 'Tasdiqlash uchun jurnalni tanlang.']);
         }
-        $article->update(['status' => $ok ? 'approved' : 'rejected', 'reason' => $ok ? 'Tasdiqlandi (moderator)' : 'Rad etildi: '.$r->note, 'journal_id' => $ok ? $j?->id : $article->journal_id, 'decided_at' => now(), 'decided_by' => $u->id]);
-        if ($ok && $j && $article->issn && ! $j->issn && ! Journal::where('issn', $article->issn)->exists()) {
-            $j->update(['issn' => $article->issn]);
-        } // the list learns ISSNs
-        if (($articleType['family'] ?? null) === 'conference' && $certificate = $article->conferenceCertificate) {
-            $certificate->update([
-                'status' => $ok ? 'verified' : 'rejected',
-                'note' => $r->note,
-                'verified_by' => $u->id,
-                'verified_at' => now(),
-            ]);
-        }
-        AuditLog::record('article.review_decided', $article, $old, $article->only(['status', 'reason', 'journal_id']));
-        DB::table('review_logs')->insert(['article_id' => $article->id, 'user_id' => $u->id, 'decision' => $ok ? 'approved' : 'rejected', 'note' => $r->note, 'created_at' => now(), 'updated_at' => now()]);
-        try {
-            $article->user->notify(new ArticleStatus($article->fresh()));
-        } catch (\Throwable $e) {
-            report($e);
+        if ($error === 'field') {
+            return back()->withErrors(['field' => 'Tasdiqlash uchun nashr sohasini tanlang.']);
         }
 
         return back()->with('ok', 'Qaror saqlandi');
@@ -170,10 +172,37 @@ class AdminController extends Controller
     public function role(Request $r, User $user)
     {
         $this->guard(['admin']);
-        $r->validate(['role' => 'required|in:student,moderator,admin']);
-        $old = $user->only(['role', 'blocked']);
-        $user->update(['role' => $r->role, 'blocked' => $r->boolean('blocked')]);
-        AuditLog::record('user.role_or_block_updated', $user, $old, $user->only(['role', 'blocked']));
+        $facultyOptions = User::query()->whereNotNull('faculty')->where('faculty', '!=', '')->distinct()->pluck('faculty')->all();
+        $data = $r->validate([
+            'role' => ['required', 'in:student,moderator,admin'],
+            'faculty_ids' => [Rule::requiredIf($r->input('role') === 'moderator'), 'array', 'min:1'],
+            'faculty_ids.*' => ['string', 'max:120', Rule::in($facultyOptions)],
+        ], [
+            'faculty_ids.required' => 'Moderatorga kamida bitta fakultet biriktiring.',
+            'faculty_ids.min' => 'Moderatorga kamida bitta fakultet biriktiring.',
+            'faculty_ids.*.in' => 'Tanlangan fakultet topilmadi.',
+        ]);
+        $old = $user->only(['role', 'blocked', 'faculty']);
+        $old['moderator_faculties'] = DB::table('moderator_faculties')->where('user_id', $user->id)->pluck('faculty')->all();
+        $facultyIds = array_values(array_unique($data['faculty_ids'] ?? []));
+
+        DB::transaction(function () use ($user, $r, $data, $facultyIds): void {
+            $user->update([
+                'role' => $data['role'],
+                'blocked' => $r->boolean('blocked'),
+                'faculty' => $data['role'] === 'moderator' ? ($facultyIds[0] ?? null) : $user->faculty,
+            ]);
+            DB::table('moderator_faculties')->where('user_id', $user->id)->delete();
+            if ($data['role'] === 'moderator') {
+                foreach ($facultyIds as $faculty) {
+                    DB::table('moderator_faculties')->insert(['user_id' => $user->id, 'faculty' => $faculty]);
+                }
+            }
+        });
+
+        $new = $user->fresh()->only(['role', 'blocked', 'faculty']);
+        $new['moderator_faculties'] = DB::table('moderator_faculties')->where('user_id', $user->id)->pluck('faculty')->all();
+        AuditLog::record('user.role_or_block_updated', $user, $old, $new);
 
         return back()->with('ok', 'Yangilandi');
     }
