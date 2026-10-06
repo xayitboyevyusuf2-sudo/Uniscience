@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Article;
 use App\Models\Setting;
 use App\Models\User;
 
@@ -31,6 +32,42 @@ class Scorer
         $total = array_sum(array_column($rows, 'pts')) * ($div ? 0.8 : 1);
 
         return ['rows' => $rows, 'total' => round($total, 2), 'diversity' => $div];
+    }
+
+    /**
+     * FR-33 (T8): professor/tadqiqotchi uchun o‘z tasdiqlangan maqolalari plus articles where
+     * they are a linked co-author in 'oxirgi' (supervisor) position (W_muallif = 0.6).
+     * Scorer::for() itself is UNCHANGED. ASSUMPTION: the yearly counted limit applies only
+     * to the mentor's own articles — supervised articles are never subject to it.
+     *
+     * @return array{rows: array<int, array{article: Article, f: array, counted: bool, pts: float, supervised: bool}>, total: float}
+     */
+    public static function forSupervised(User $u): array
+    {
+        $c = config('uniscience');
+        $own = self::for($u);
+        $supervised = Article::query()->where('status', 'approved')->with('journal')
+            ->whereHas('authors', fn ($q) => $q->where('user_id', $u->id)->where('position', 'oxirgi'))
+            ->where('user_id', '!=', $u->id)
+            ->orderBy('created_at')->get();
+
+        $rows = [];
+        foreach ($own['rows'] as $id => $row) {
+            $rows[$id] = $row + ['supervised' => false];
+        }
+        foreach ($supervised as $article) {
+            if (isset($rows[$article->id])) {
+                continue;
+            }
+            $tier = $article->effectiveTier();
+            if (! $tier || ! array_key_exists($tier, $c['tiers'])) {
+                continue;
+            }
+            $f = [self::wField($u->direction, $article->effectiveField()), $c['tiers'][$tier], 0.6, self::wDate($article->published_at)];
+            $rows[$article->id] = ['article' => $article, 'f' => $f, 'counted' => true, 'pts' => array_product($f), 'supervised' => true];
+        }
+
+        return ['rows' => $rows, 'total' => round(array_sum(array_column($rows, 'pts')), 2)];
     }
 
     public static function wField($mine, $jf)

@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('users:purge-unverified')->hourly();
+Schedule::command('ratings:recalculate')->monthlyOn(1, '00:10');

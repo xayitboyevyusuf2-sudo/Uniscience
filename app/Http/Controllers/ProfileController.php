@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\AdminEditUserRequest;
 use App\Models\User;
 use App\Services\AuditLog;
+use App\Services\RatingService;
 use App\Services\Scorer;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -19,9 +20,15 @@ use Illuminate\View\View;
 class ProfileController extends Controller
 {
     public function show(User $user): View // logged-in users only (see routes)
-    {$s = Scorer::for($user);
+    {
+        $s = Scorer::for($user);
+        $rating = $user->rating ?? RatingService::recalculateUser($user);
+        if ($rating->rank_university === null) {
+            RatingService::refreshRanksFor($rating->category);
+            $rating->refresh();
+        }
 
-        return view('profile.show', ['u' => $user, 's' => $s, 'rows' => collect($s['rows'])->values()]);
+        return view('profile.show', ['u' => $user, 's' => $s, 'rows' => collect($s['rows'])->values(), 'rating' => $rating]);
     }
 
     public function edit(): View
@@ -154,7 +161,8 @@ class ProfileController extends Controller
         ];
         $user->update($new);
         AuditLog::record('user.profile_updated', $user, $old, $user->only(['first_name', 'last_name', 'patronymic', 'name', 'username', 'university', 'faculty', 'direction', 'group_name']));
+        RatingService::refreshAfterChange($user->fresh());
 
-        return redirect('/talaba/'.$user->id)->with('ok','Foydalanuvchi profili yangilandi.');
+        return redirect('/talaba/'.$user->id)->with('ok', 'Foydalanuvchi profili yangilandi.');
     }
 }

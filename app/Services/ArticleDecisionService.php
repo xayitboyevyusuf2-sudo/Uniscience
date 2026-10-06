@@ -81,6 +81,8 @@ class ArticleDecisionService
             report($exception);
         }
 
+        RatingService::refreshAfterChange($article->user);
+
         return null;
     }
 }

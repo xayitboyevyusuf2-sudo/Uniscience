@@ -7,6 +7,7 @@
 @if($u->isStudent())<p class="text-slate-600">{{ $u->student_id }} · {{ $u->course }}-kurs · {{ $u->group_name }} · GPA {{ $u->gpa }}</p>@endif
 @if($u->interests)<p class="mt-1 text-sm"><span class="text-slate-500">Qiziqishlari:</span> {{ $u->interests }}</p>@endif</div>
 <div class="sm:text-right"><p class="text-sm text-slate-500">Reyting balli</p><p class="font-serif text-4xl text-lapis">{{ number_format($s['total'],2) }}</p>
+<p class="mt-1 text-sm text-slate-600">O‘rin: guruh {{ $rating->rank_group ?? '—' }} · fakultet {{ $rating->rank_faculty ?? '—' }} · universitet {{ $rating->rank_university ?? '—' }}</p>
 @if(auth()->id()===$u->id)<a class="btn inline-block mt-2" href="/profil">Profilni tahrirlash</a>@endif</div></div>
 <div class="card"><h2 class="font-serif text-lg mb-2">Ro‘yxat ma’lumotlari</h2><dl class="grid gap-2 sm:grid-cols-2">
 <div><dt class="text-sm text-slate-500">Toifa</dt><dd>{{ ucfirst($u->category ?? '—') }}</dd></div>

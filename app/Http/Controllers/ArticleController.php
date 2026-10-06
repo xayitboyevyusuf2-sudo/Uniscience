@@ -9,6 +9,7 @@ use App\Models\JournalRequest;
 use App\Models\User;
 use App\Notifications\ArticleStatus;
 use App\Notifications\ArticleSubmitted;
+use App\Services\RatingService;
 use App\Services\Scorer;
 use App\Services\Verification\VerificationAdapter;
 use Illuminate\Http\RedirectResponse;
@@ -157,6 +158,7 @@ class ArticleController extends Controller
             } catch (\Throwable $exception) {
                 report($exception);
             }
+            RatingService::refreshAfterChange(auth()->user());
         }
 
         return redirect('/maqola/'.$article->id)->with('ok', $reason);

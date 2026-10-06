@@ -11,10 +11,11 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PasswordController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\RatingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [PageController::class, 'home'])->name('home');
-Route::get('/reyting', [PageController::class, 'rating']);
+Route::get('/reyting', [RatingController::class, 'index']);
 Route::get('/baza', [PageController::class, 'base']);
 Route::get('/api/jurnallar/qidiruv', JournalSearchController::class)->middleware(['auth', 'throttle:60,1'])->name('journals.search');
 Route::get('/malumotnoma/{token}', [PageController::class, 'verify']);
@@ -48,6 +49,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/maqola/{article}/pdf', [ArticleController::class, 'pdf'])->middleware('verified')->name('articles.pdf');
     Route::post('/malumotnoma', [PageController::class, 'certify'])->middleware('verified');
     Route::get('/jurnallar', [PageController::class, 'journals'])->name('journals.index');
+    Route::get('/reyting/mening', [RatingController::class, 'my'])->name('ratings.my');
+    Route::get('/reyting/eksport.csv', [RatingController::class, 'exportCsv'])->name('ratings.export.csv');
+    Route::get('/reyting/eksport.pdf', [RatingController::class, 'exportPdf'])->name('ratings.export.pdf');
     Route::get('/moderator/navbat', [ModeratorController::class, 'queue'])->name('moderator.queue');
     Route::get('/moderator/maqola/{article}', [ModeratorController::class, 'show'])->name('moderator.articles.show');
     Route::get('/moderator/maqola/{article}/sertifikat/pdf', [ModeratorController::class, 'certificatePdf'])->name('moderator.certificates.pdf');
