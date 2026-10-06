@@ -27,7 +27,7 @@ class RegisterRequest extends FormRequest
             'first_name' => ['required', 'string', 'max:60'],
             'last_name' => ['required', 'string', 'max:60'],
             'patronymic' => ['required', 'string', 'max:60'],
-            'university' => ['required', 'string', 'max:190'],
+            'university' => ['required', 'string', 'max:190', Rule::exists('universities', 'name')->where('is_active', true)],
             'direction' => ['required', Rule::in(config('uniscience.fields'))],
             'faculty' => [Rule::excludeIf(! $isStudent), Rule::requiredIf($isStudent), 'string', 'max:120'],
             'course' => [Rule::excludeIf(! $isStudent), Rule::requiredIf($isStudent), 'integer', 'between:1,6'],
@@ -40,9 +40,16 @@ class RegisterRequest extends FormRequest
             'position_title' => [Rule::excludeIf(! $isAcademic), Rule::requiredIf($isAcademic), 'string', 'max:120'],
             'department' => [Rule::excludeIf(! $isAcademic), Rule::requiredIf($isAcademic), 'string', 'max:190'],
             'email' => ['required', 'email', 'max:255', Rule::unique('users', 'email')],
+            'username' => ['required', 'string', 'max:190', 'regex:/^[a-zA-Z0-9._-]+$/', Rule::unique('users', 'username')],
             'password' => ['required', 'confirmed', Password::min(8)->letters()->numbers()],
             'consent' => ['accepted'],
         ];
+    }
+
+    protected function prepareForValidation(): void
+    {
+        // The username field is authoritative; ignore any stray 'username' from other sources.
+        $this->merge(['username' => $this->input('username')]);
     }
 
     public function messages(): array
@@ -122,7 +129,7 @@ class RegisterRequest extends FormRequest
     public function after(): array
     {
         return [function (ValidationValidator $validator): void {
-            if ($validator->errors()->hasAny(['last_name', 'first_name', 'patronymic'])) {
+            if ($validator->errors()->hasAny(['last_name', 'first_name', 'patronymic', 'username'])) {
                 return;
             }
 

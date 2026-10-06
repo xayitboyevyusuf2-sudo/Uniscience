@@ -7,7 +7,7 @@
 </select>
 <div class="grid sm:grid-cols-2 gap-x-4"><div><label for="first_name">Ism</label><input class="i" id="first_name" name="first_name" value="{{ old('first_name') }}" required></div><div><label for="last_name">Familiya</label><input class="i" id="last_name" name="last_name" value="{{ old('last_name') }}" required></div></div>
 <label for="patronymic">Otasining ismi</label><input class="i" id="patronymic" name="patronymic" value="{{ old('patronymic') }}" required>
-<label for="university">OTM</label><input class="i" id="university" name="university" value="{{ old('university') }}" required>
+<label for="university">OTM</label><select class="i" id="university" name="university" required>@foreach(\App\Models\University::where('is_active', true)->orderBy('sort')->orderBy('name')->get() as $university)<option value="{{ $university->name }}" @selected(old('university')===$university->name)>{{ $university->name }}</option>@endforeach</select>
 <label for="direction">Yo‘nalish (soha)</label><select class="i" id="direction" name="direction" required>@foreach(config('uniscience.fields') as $f)<option value="{{ $f }}" @selected(old('direction')===$f)>{{ $f }}</option>@endforeach</select>
 <section data-category-block="student">
 <label for="student_id">Talaba ID raqami</label><input class="i" id="student_id" name="student_id" value="{{ old('student_id') }}" data-required>
@@ -25,6 +25,7 @@
 <label for="position_title">Lavozim</label><input class="i" id="position_title" name="position_title" value="{{ old('position_title') }}" data-required>
 <label for="department">Kafedra yoki bo‘lim</label><input class="i" id="department" name="department" value="{{ old('department') }}" data-required>
 </section>
+<label for="login">Login (kirish uchun)</label><input class="i" id="login" name="username" value="{{ old('username') }}" required maxlength="190" autocomplete="username">
 <label for="email">Email</label><input class="i" id="email" type="email" name="email" value="{{ old('email') }}" required>
 <div class="flex items-end gap-2"><div class="flex-1"><label for="password">Parol</label><input class="i" id="password" type="password" name="password" required></div><button class="btn mb-0" type="button" data-password-toggle aria-controls="password" aria-label="Parolni ko‘rsatish" aria-pressed="false">Ko‘rsatish</button></div>
 <div class="flex items-end gap-2"><div class="flex-1"><label for="password_confirmation">Parolni takrorlang</label><input class="i" id="password_confirmation" type="password" name="password_confirmation" required></div><button class="btn mb-0" type="button" data-password-toggle aria-controls="password_confirmation" aria-label="Parolni ko‘rsatish" aria-pressed="false">Ko‘rsatish</button></div>

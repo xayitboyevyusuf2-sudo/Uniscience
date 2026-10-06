@@ -27,10 +27,9 @@ class AuthController extends Controller
         $isMentor = in_array($d['category'], ['tadqiqotchi', 'professor'], true);
         $u = User::create(Arr::except($d, ['consent', 'password_confirmation']) + [
             'name' => trim($d['first_name'].' '.$d['last_name']),
-            'username' => trim($d['last_name'].' '.$d['first_name'].' '.$d['patronymic']),
+            'username' => $d['username'],
             'role' => 'student', 'approval_status' => $isMentor ? 'pending' : 'approved', 'consent_at' => now(),
         ]);
-        $u->sendEmailVerificationNotification();
 
         if ($isMentor) {
             return redirect()->route('registration.pending');
@@ -38,7 +37,7 @@ class AuthController extends Controller
         Auth::login($u);
         $r->session()->regenerate();
 
-        return redirect()->route('verification.notice');
+        return redirect('/portfel')->with('ok', 'Ro‘yxatdan o‘tdingiz. Profilni to‘ldiring.');
     }
 
     public function showLogin()

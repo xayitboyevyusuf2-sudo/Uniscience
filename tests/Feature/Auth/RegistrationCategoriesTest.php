@@ -20,13 +20,14 @@ class RegistrationCategoriesTest extends TestCase
 
     public function test_bachelor_registration_creates_full_name_username_and_preserves_display_name(): void
     {
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         $this->post('/royxat', $this->studentPayload());
 
         $this->assertDatabaseHas('users', [
             'email' => 'elbek@example.uz',
             'category' => 'bakalavr',
             'name' => 'Elbek Karimov',
-            'username' => 'Karimov Elbek Anvarovich',
+            'username' => 'elbek.karimov',
             'approval_status' => 'approved',
         ]);
         $this->assertSame('Karimov Elbek Anvarovich', User::where('email', 'elbek@example.uz')->firstOrFail()->fullName());
@@ -35,30 +36,29 @@ class RegistrationCategoriesTest extends TestCase
 
     public function test_bachelor_registration_sends_verification_email_and_redirects_to_notice(): void
     {
-        Notification::fake([VerifyEmailUz::class]);
-
-        $this->post('/royxat', $this->studentPayload())
-            ->assertRedirect('/email/tasdiqlash');
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
+        $this->post('/royxat', $this->studentPayload())->assertRedirect('/portfel');
 
         $user = User::where('email', 'elbek@example.uz')->firstOrFail();
-
         $this->assertAuthenticatedAs($user);
-        Notification::assertSentTo($user, VerifyEmailUz::class);
+        $this->assertNull($user->email_verified_at);
     }
 
     public function test_registration_ignores_username_from_the_request(): void
     {
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         $this->post('/royxat', $this->studentPayload(['username' => 'nik']));
 
         $this->assertDatabaseHas('users', [
             'email' => 'elbek@example.uz',
-            'username' => 'Karimov Elbek Anvarovich',
+            'username' => 'elbek.karimov',
         ]);
         $this->assertDatabaseMissing('users', ['username' => 'nik']);
     }
 
     public function test_professor_registration_waits_for_approval_and_cannot_log_in_while_pending(): void
     {
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         $this->post('/royxat', $this->academicPayload('professor'))
             ->assertRedirect('/tasdiq-kutilmoqda');
 
@@ -162,6 +162,7 @@ class RegistrationCategoriesTest extends TestCase
 
     public function test_duplicate_full_name_is_rejected_case_insensitively(): void
     {
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         $this->post('/royxat', $this->studentPayload());
         $this->post('/chiqish');
 
@@ -171,6 +172,7 @@ class RegistrationCategoriesTest extends TestCase
             'patronymic' => 'anvarovich',
             'email' => 'different@example.uz',
             'student_id' => 'student-2',
+            'username' => 'elbek.karimov.2',
         ]))->assertSessionHasErrors([
             'username' => 'Bu F.I.Sh. bilan foydalanuvchi mavjud. Agar bu siz bo‘lsangiz, kirish sahifasidan foydalaning yoki administratorga murojaat qiling.',
         ]);
@@ -216,6 +218,7 @@ class RegistrationCategoriesTest extends TestCase
 
     public function test_masters_registration_requires_student_fields_and_allows_optional_bachelor_university(): void
     {
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         $this->post('/royxat', $this->studentPayload([
             'category' => 'magistr',
             'bachelor_university' => '',
@@ -226,7 +229,8 @@ class RegistrationCategoriesTest extends TestCase
             'category' => 'magistr',
             'email' => 'master@example.uz',
             'student_id' => 'master-1',
-        ]))->assertRedirect('/email/tasdiqlash');
+            'username' => 'master.1',
+        ]))->assertRedirect('/portfel');
 
         $this->assertDatabaseHas('users', [
             'email' => 'master@example.uz',
@@ -256,6 +260,7 @@ class RegistrationCategoriesTest extends TestCase
 
     public function test_hemis_fields_are_present_and_registration_sends_no_http_requests(): void
     {
+        \App\Models\University::create(['name' => 'Toshkent davlat universiteti']);
         Http::fake();
         Http::preventStrayRequests();
 
@@ -307,6 +312,7 @@ class RegistrationCategoriesTest extends TestCase
             'birth_date' => '2001-01-02',
             'student_id' => 'student-1',
             'email' => 'elbek@example.uz',
+            'username' => 'elbek.karimov',
             'password' => 'validPass123',
             'password_confirmation' => 'validPass123',
             'consent' => 1,
@@ -326,6 +332,7 @@ class RegistrationCategoriesTest extends TestCase
             'university' => 'Toshkent davlat universiteti',
             'direction' => 'Biologiya',
             'email' => 'aziza@example.uz',
+            'username' => 'aziza.olimova',
             'password' => 'validPass123',
             'password_confirmation' => 'validPass123',
             'consent' => 1,

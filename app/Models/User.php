@@ -3,17 +3,14 @@
 namespace App\Models;
 
 use App\Notifications\ResetPasswordUz;
-use App\Notifications\VerifyEmailUz;
-use Illuminate\Auth\MustVerifyEmail as MustVerifyEmailTrait;
-use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
-class User extends Authenticatable implements MustVerifyEmail
+class User extends Authenticatable
 {
-    use HasFactory, \Illuminate\Notifications\Notifiable, MustVerifyEmailTrait;
+    use HasFactory, \Illuminate\Notifications\Notifiable;
 
     protected $guarded = [];
 
@@ -47,11 +44,6 @@ class User extends Authenticatable implements MustVerifyEmail
     public function sendPasswordResetNotification($token): void
     {
         $this->notify(new ResetPasswordUz($token));
-    }
-
-    public function sendEmailVerificationNotification(): void
-    {
-        $this->notify(new VerifyEmailUz);
     }
 
     public function fullName(): string

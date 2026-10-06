@@ -19,5 +19,8 @@ class DatabaseSeeder extends Seeder
         if (config('uniscience.admin_email') && config('uniscience.admin_password')) {
             User::updateOrCreate(['email' => config('uniscience.admin_email')], ['name' => 'Admin', 'first_name' => 'Admin', 'email_verified_at' => now(), 'password' => config('uniscience.admin_password'), 'role' => 'admin', 'faculty' => 'Iqtisodiyot fakulteti']);
         }
+        foreach (['Toshkent davlat universiteti', 'TATU', 'O‘zbekiston Milliy universiteti'] as $i => $name) {
+            \App\Models\University::firstOrCreate(['name' => $name], ['sort' => $i]);
+        }
     }
 }

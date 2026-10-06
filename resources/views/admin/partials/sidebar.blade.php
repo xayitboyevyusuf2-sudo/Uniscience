@@ -2,6 +2,7 @@
 ['/admin', 'Navbat', 'admin'],
 ['/admin/foydalanuvchilar', 'Foydalanuvchilar', 'admin/foydalanuvchi*'],
 ['/admin/jurnallar', 'Jurnallar', 'admin/jurnallar*'],
+['/admin/universitetlar', 'Universitetlar', 'admin/universitetlar*'],
 ['/admin/yoriqnoma', 'Kontent: hujjatlar', 'admin/yoriqnoma*'],
 ['/admin/videolar', 'Kontent: videolar', 'admin/videolar*'],
 ['/admin/yangiliklar', 'Kontent: yangiliklar', 'admin/yangiliklar*'],

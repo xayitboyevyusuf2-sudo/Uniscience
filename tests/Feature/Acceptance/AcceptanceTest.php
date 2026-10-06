@@ -23,14 +23,15 @@ class AcceptanceTest extends TestCase
 {
     use RefreshDatabase;
 
-    // TS-01: registration with consent and email verification
+    // TS-01: registration with consent — no email verification
     public function test_ts01_registration_consent_and_email_verification_link(): void
     {
-        $this->post('/royxat', $this->registerPayload())->assertRedirect();
+        \App\Models\University::create(['name' => 'TATU']);
+        $this->post('/royxat', $this->registerPayload())->assertRedirect('/portfel');
         $user = User::where('email', 'ts01@example.uz')->firstOrFail();
         $this->assertNotNull($user->consent_at);
-
-        $this->actingAs($user)->get('/yuklash')->assertRedirect('/email/tasdiqlash');
+        $this->assertSame('ts01', $user->username);
+        $this->assertNull($user->email_verified_at);
     }
 
     // TS-03: article upload shows multilingual metadata, authors, PDF and journal search
@@ -171,9 +172,9 @@ class AcceptanceTest extends TestCase
         $leader = User::factory()->create(['role' => 'rahbariyat']);
         $journal = Journal::create(['name' => 'TS22 jurnali', 'field' => 'Iqtisodiyot', 'tier' => 'D', 'listed_from' => '2019-01-01']);
 
-        $this->post('/royxat', $this->registerPayload())->assertRedirect();
+        \App\Models\University::create(['name' => 'TATU']);
+        $this->post('/royxat', $this->registerPayload())->assertRedirect('/portfel');
         $user = User::where('email', 'ts01@example.uz')->firstOrFail();
-        $user->update(['email_verified_at' => now()]);
 
         $this->actingAs($user)->post('/yuklash', [
             'title' => 'TS22 to‘liq oqim maqolasi',
@@ -219,6 +220,7 @@ class AcceptanceTest extends TestCase
             'birth_date' => '2001-01-02',
             'student_id' => 'student-ts01',
             'email' => 'ts01@example.uz',
+            'username' => 'ts01',
             'password' => 'validPass123',
             'password_confirmation' => 'validPass123',
             'consent' => 1,
