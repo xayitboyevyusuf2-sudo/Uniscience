@@ -4,8 +4,8 @@
 <section class="hero text-white"><div class="relative max-w-5xl mx-auto px-4 py-14 md:py-20 grid md:grid-cols-2 gap-8 items-center">
 <div><h1 class="font-serif text-4xl md:text-5xl font-bold leading-tight">Ilmiy natijalaringiz bir joyda</h1>
 <p class="mt-4 text-blue-100 text-lg">Maqolangizni yuklang — tizim jurnalni OAK ro‘yxati bo‘yicha tekshiradi va reytingga qo‘shadi. Stipendiya komissiyasi uchun ma’lumotnoma bir bosishda tayyor.</p>
-<div class="mt-6 flex flex-wrap gap-3"><a href="/royxat" class="bg-gold text-lapis font-semibold rounded-md px-5 py-2.5">Ro‘yxatdan o‘tish</a><a href="/baza" class="border border-white/60 rounded-md px-5 py-2.5">Ilmiy bazani ko‘rish</a></div></div>
-<svg class="hidden md:block w-full max-w-xs mx-auto text-teal-300" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="40" y="40" width="120" height="120"/><rect x="40" y="40" width="120" height="120" transform="rotate(45 100 100)"/><rect x="62" y="62" width="76" height="76" opacity=".7"/><rect x="62" y="62" width="76" height="76" transform="rotate(45 100 100)" opacity=".7"/><circle cx="100" cy="100" r="14"/></svg>
+<div class="mt-6 flex flex-wrap gap-3"><a href="/royxat" class="btn-cta">Ro‘yxatdan o‘tish</a><a href="/baza" class="border border-white/60 rounded-md px-5 py-2.5">Ilmiy bazani ko‘rish</a></div></div>
+@if(file_exists(public_path('images/logo.png')))<img src="/images/logo.png" alt="UniScience" class="hidden md:block w-full max-w-xs mx-auto rounded-xl bg-white/10 p-6">@else<svg class="hidden md:block w-full max-w-xs mx-auto text-teal-300" viewBox="0 0 200 200" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="40" y="40" width="120" height="120"/><rect x="40" y="40" width="120" height="120" transform="rotate(45 100 100)"/><rect x="62" y="62" width="76" height="76" opacity=".7"/><rect x="62" y="62" width="76" height="76" transform="rotate(45 100 100)" opacity=".7"/><circle cx="100" cy="100" r="14"/></svg>@endif
 </div></section>
 @endguest
 @endsection

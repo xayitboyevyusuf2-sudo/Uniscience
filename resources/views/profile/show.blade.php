@@ -1,16 +1,19 @@
 @extends('layouts.app')
 @section('content')
-<div class="card flex flex-wrap gap-5 items-center">
-@include('partials.avatar',['u'=>$u,'size'=>'w-24 h-24'])
-<div class="flex-1 min-w-[12rem]"><h1 class="font-serif text-2xl">{{ $u->fullName() }}</h1>
-<p class="text-slate-600">{{ $u->university }} · {{ $u->faculty }} · {{ $u->direction }}</p>
-@if($u->isStudent())<p class="text-slate-600">{{ $u->student_id }} · {{ $u->course }}-kurs · {{ $u->group_name }} · GPA {{ $u->gpa }}</p>@endif
-@if($u->interests)<p class="mt-1 text-sm"><span class="text-slate-500">Qiziqishlari:</span> {{ $u->interests }}</p>@endif</div>
-<div class="sm:text-right"><p class="text-sm text-slate-500">Reyting balli</p><p class="font-serif text-4xl text-lapis">{{ number_format($s['total'],2) }}</p>
-<p class="mt-1 text-sm text-slate-600">O‘rin: guruh {{ $rating->rank_group ?? '—' }} · fakultet {{ $rating->rank_faculty ?? '—' }} · universitet {{ $rating->rank_university ?? '—' }}</p>
-@if(auth()->id()===$u->id)<a class="btn inline-block mt-2" href="/profil">Profilni tahrirlash</a>@endif</div></div>
+@php($categoryStyles = ['bakalavr' => 'from-blue-600 to-blue-800', 'magistr' => 'from-indigo-600 to-indigo-800', 'tadqiqotchi' => 'from-teal-600 to-teal-800', 'professor' => 'from-amber-600 to-amber-800'])
+@php($categoryLabels = ['bakalavr' => 'Bakalavr', 'magistr' => 'Magistr', 'tadqiqotchi' => 'Tadqiqotchi', 'professor' => 'Professor'])
+<div class="card-hero {{ $categoryStyles[$u->category] ?? 'from-lapis to-[#0e2440]' }} flex flex-wrap gap-5 items-center">
+@include('partials.avatar',['u'=>$u,'size'=>'w-24 h-24 ring-4 ring-white/30'])
+<div class="flex-1 min-w-[12rem]"><span class="badge-gold mb-2">{{ $categoryLabels[$u->category] ?? ucfirst($u->category ?? '—') }}</span><h1 class="font-serif text-2xl">{{ $u->fullName() }}</h1>
+<p class="text-blue-100">{{ $u->university }} · {{ $u->faculty }} · {{ $u->direction }}</p>
+@if($u->isStudent())<p class="text-blue-100">{{ $u->student_id }} · {{ $u->course }}-kurs · {{ $u->group_name }} · GPA {{ $u->gpa }}</p>@endif
+@if($u->isMentor())<p class="text-blue-100">{{ $u->academic_degree }} · {{ $u->position_title }} · {{ $u->department }}</p>@endif
+@if($u->interests)<p class="mt-1 text-sm"><span class="text-blue-200">Qiziqishlari:</span> {{ $u->interests }}</p>@endif</div>
+<div class="sm:text-right"><p class="text-sm text-blue-200">Reyting balli</p><p class="font-serif text-4xl">{{ number_format($s['total'],2) }}</p>
+<p class="mt-1 text-sm text-blue-100">O‘rin: guruh {{ $rating->rank_group ?? '—' }} · fakultet {{ $rating->rank_faculty ?? '—' }} · universitet {{ $rating->rank_university ?? '—' }}</p>
+@if(auth()->id()===$u->id)<a class="btn-cta inline-block mt-2" href="/profil">Profilni tahrirlash</a>@endif</div></div>
 <div class="card"><h2 class="font-serif text-lg mb-2">Ro‘yxat ma’lumotlari</h2><dl class="grid gap-2 sm:grid-cols-2">
-<div><dt class="text-sm text-slate-500">Toifa</dt><dd>{{ ucfirst($u->category ?? '—') }}</dd></div>
+<div><dt class="text-sm text-slate-500">Toifa</dt><dd>{{ $categoryLabels[$u->category] ?? ucfirst($u->category ?? '—') }}</dd></div>
 <div><dt class="text-sm text-slate-500">Tug‘ilgan sana</dt><dd>{{ $u->birth_date?->format('Y-m-d') ?? '—' }}</dd></div>
 <div><dt class="text-sm text-slate-500">Telefon</dt><dd>{{ $u->phone ?: '—' }}</dd></div>
 <div><dt class="text-sm text-slate-500">Telegram</dt><dd>{{ $u->telegram ?: '—' }}</dd></div>
