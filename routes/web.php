@@ -18,6 +18,7 @@ use App\Http\Controllers\NewsController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\PageController;
 use App\Http\Controllers\PasswordController;
+use App\Http\Controllers\PrivacyController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\RatingController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +28,7 @@ Route::get('/reyting', [RatingController::class, 'index']);
 Route::get('/baza', [PageController::class, 'base']);
 Route::get('/api/jurnallar/qidiruv', JournalSearchController::class)->middleware(['auth', 'throttle:60,1'])->name('journals.search');
 Route::get('/royhat', fn () => redirect('/royxat', 301));
+Route::get('/maxfiylik', [PrivacyController::class, 'show'])->name('privacy');
 Route::get('/malumotnoma/{token}', [PageController::class, 'verify']);
 Route::middleware('guest')->group(function () {
     Route::get('/royxat', [AuthController::class, 'showRegister']);
@@ -49,6 +51,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/email/tasdiqlash/{id}/{hash}', [EmailVerificationController::class, 'verify'])->middleware('signed')->name('verification.verify');
     Route::get('/profil', [ProfileController::class, 'edit'])->middleware('verified');
     Route::post('/profil', [ProfileController::class, 'update'])->middleware('verified');
+    Route::post('/profil/ochirish-sorovi', [PrivacyController::class, 'requestDeletion'])->middleware('verified')->name('privacy.request-deletion');
     Route::get('/talaba/{user}', [ProfileController::class, 'show'])->middleware('verified');
     Route::get('/foto/{user}', [ProfileController::class, 'photo'])->middleware('verified');
     Route::get('/portfel', [ArticleController::class, 'portfolio'])->middleware('verified');
@@ -106,11 +109,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/admin/jurnal-arizalari', [AdminJournalRequestController::class, 'index'])->name('admin.journal-requests.index');
     Route::post('/admin/jurnal-arizalari/{journalRequest}/hal', [AdminJournalRequestController::class, 'resolve'])->name('admin.journal-requests.resolve');
     Route::post('/admin/jurnal-arizalari/{journalRequest}/rad', [AdminJournalRequestController::class, 'reject'])->name('admin.journal-requests.reject');
-    Route::get('/admin/ochirish-sorovlari', function () {
-        abort_unless(auth()->user()->isAdmin(), 403);
-
-        return view('admin.delete-requests');
-    })->name('admin.delete-requests');
+    Route::get('/admin/ochirish-sorovlari', [PrivacyController::class, 'adminIndex'])->name('admin.delete-requests');
+    Route::post('/admin/ochirish-sorovlari/{deletionRequest}', [PrivacyController::class, 'process'])->name('admin.delete-requests.process');
     Route::post('/admin/sozlamalar', [AdminController::class, 'settings']);
     Route::get('/admin/foydalanuvchi/{user}/tahrir', [ProfileController::class, 'editUser']);
     Route::post('/admin/foydalanuvchi/{user}/tahrir', [ProfileController::class, 'updateUser']);

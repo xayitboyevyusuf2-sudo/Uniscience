@@ -9,6 +9,7 @@ use App\Integrations\Oak\OakSyncAdapter;
 use App\Services\Verification\RuleBasedVerifier;
 use App\Services\Verification\VerificationAdapter;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -29,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (! $this->app->environment('local') && str_starts_with((string) config('app.url'), 'https://')) {
+            URL::forceScheme('https');
+        }
+
         View::composer('layouts.app', function ($view): void {
             $user = Auth::user();
 

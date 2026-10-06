@@ -11,3 +11,5 @@ Artisan::command('inspire', function () {
 Schedule::command('users:purge-unverified')->hourly();
 Schedule::command('ratings:recalculate')->monthlyOn(1, '00:10');
 Schedule::command('news:archive')->daily();
+Schedule::command('backup:clean')->daily()->at('01:00');
+Schedule::command('backup:run')->daily()->at('01:30');

@@ -19,6 +19,8 @@
 <div><label for="password">Yangi parol</label><input class="i" id="password" type="password" name="password" autocomplete="new-password"></div>
 <div><label for="password_confirmation">Yangi parolni takrorlang</label><input class="i" id="password_confirmation" type="password" name="password_confirmation" autocomplete="new-password"></div>
 </div></div>
-<p class="text-sm text-slate-500 mt-2">Fakultet va yo‘nalishni faqat administrator o‘zgartiradi. Profilga faqat tasdiqlangan foydalanuvchilar kira oladi.</p>
+<p class="text-sm text-slate-500 mt-2">Fakultet va yo‘nalishni faqat administrator o‘zgartiradi. Profilga faqat tasdiqlangan foydalanuvchilar kira oladi. <a class="underline" href="/maxfiylik">Maxfiylik siyosati</a></p>
 <button class="btn mt-4">Saqlash</button> <a class="ml-3 text-sm underline" href="/talaba/{{ $u->id }}">Bekor qilish</a></form>
+<div class="card"><h2 class="font-serif text-lg">Ma’lumotlarimni o‘chirish so‘rovi</h2><p class="text-sm text-slate-600">So‘rov tasdiqlanganda shaxsiy ma’lumotlaringiz anonimlashtiriladi va kirish bloklanadi. Statistika va audit yozuvlari saqlanadi.</p>
+<form method="post" action="/profil/ochirish-sorovi" class="mt-3" onsubmit="return confirm('Ma’lumotlaringizni o‘chirish so‘rovini yuborasizmi?')">@csrf<button class="btn bg-red-700!">So‘rov yuborish</button></form></div>
 @endsection
