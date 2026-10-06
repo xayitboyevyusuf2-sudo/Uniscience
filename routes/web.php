@@ -11,6 +11,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\EmailVerificationController;
 use App\Http\Controllers\GuideController;
 use App\Http\Controllers\JournalSearchController;
+use App\Http\Controllers\LeadershipController;
 use App\Http\Controllers\MatchingController;
 use App\Http\Controllers\ModeratorController;
 use App\Http\Controllers\NewsController;
@@ -120,5 +121,9 @@ Route::middleware('auth')->group(function () {
     Route::post('/admin/jurnallar', [AdminJournalController::class, 'store'])->name('admin.journals.store');
     Route::get('/admin/jurnallar/{journal}/tahrir', [AdminJournalController::class, 'edit'])->name('admin.journals.edit');
     Route::post('/admin/jurnallar/{journal}', [AdminJournalController::class, 'update'])->name('admin.journals.update');
+    Route::get('/rahbariyat', [LeadershipController::class, 'index'])->name('leadership.index');
+    Route::get('/rahbariyat/eksport.csv', [LeadershipController::class, 'exportCsv'])->name('leadership.export.csv');
+    Route::get('/rahbariyat/eksport.pdf', [LeadershipController::class, 'exportPdf'])->name('leadership.export.pdf');
+    Route::get('/vazirlik', fn () => view('vazirlik'))->name('ministry.placeholder');
     Route::post('/admin/jurnallar/{journal}/chiqarish', [AdminJournalController::class, 'delist'])->name('admin.journals.delist');
 });

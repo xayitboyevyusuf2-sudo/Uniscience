@@ -3,6 +3,7 @@
 <title>@yield('title','UniScience.uz — Talabaning raqamli ilmiy portfeli')</title>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Source+Serif+4:wght@600;700&display=swap" rel="stylesheet">
 @vite(['resources/css/app.css','resources/js/app.js'])
+@stack('scripts')
 </head>
 <body class="bg-slate-50 text-slate-900 font-sans min-h-screen flex flex-col">
 <header class="bg-lapis text-white sticky top-0 z-10 shadow"><div class="max-w-5xl mx-auto px-4 py-3 flex flex-wrap items-center gap-x-6 gap-y-2">
@@ -12,6 +13,7 @@
  if (auth()->check()) { $nav[] = ['/portfel','Portfel']; $nav[] = ['/yuklash','Yuklash']; $nav[] = ['/jurnallar','Jurnallar']; $nav[] = ['/yoriqnoma','Yo‘riqnoma']; $nav[] = ['/yangiliklar','Yangiliklar']; $nav[] = ['/matching','Matching']; $nav[] = ['/profil','Profil']; }
  $nav[] = ['/reyting','Reyting']; $nav[] = ['/baza','Baza'];
  if (auth()->check() && in_array(auth()->user()->role,['admin','moderator'])) { $nav[] = ['/admin','Boshqaruv']; $nav[] = ['/moderator/navbat','Moderator navbati']; }
+ if (auth()->check() && in_array(auth()->user()->role,['admin','rahbariyat'])) { $nav[] = ['/rahbariyat','Rahbariyat']; }
 @endphp
 <nav class="flex flex-wrap gap-1 text-sm flex-1">@foreach($nav as [$u,$l])<a href="{{ $u }}" class="px-3 py-1.5 rounded-md {{ request()->is(ltrim($u,'/').'*') ? 'bg-white/20 font-semibold' : 'hover:bg-white/10' }}">{{ $l }}</a>@endforeach</nav>
 @auth
