@@ -3,19 +3,33 @@
 @source '../**/*.blade.php';
 
 @theme {
-  --color-lapis: #17498f;
-  --color-tl: #0b8a83;
-  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
-  --font-serif: 'Source Serif 4', ui-serif, Georgia, serif;
+  --color-lapis: #122B46;
+  --color-tl: #38B6E3;
+  --color-gold: #E8B33C;
+  --color-mist: #ECEFF4;
+  --font-sans: 'Inter', 'Manrope', ui-sans-serif, system-ui, sans-serif;
+  --font-serif: 'Inter', 'Manrope', ui-sans-serif, system-ui, sans-serif;
 }
 
 @layer components {
   .i { @apply w-full border border-slate-300 rounded-md px-3 py-2 bg-white; }
   .btn { @apply bg-lapis text-white rounded-md px-4 py-2 font-semibold cursor-pointer; }
+  .btn-cta { @apply bg-gold text-lapis rounded-md px-4 py-2 font-semibold cursor-pointer; }
   .card { @apply bg-white border border-slate-200 rounded-lg p-5 mb-4 shadow-sm; }
   label { @apply block mt-3 mb-1 font-medium; }
   th, td { @apply text-left p-2 border-b border-slate-200 align-top; }
 }
 
-.hero { position: relative; overflow: hidden; background: linear-gradient(135deg, #17498f 0%, #0f3a75 60%, #0b6f6a 130%); }
+.hero { position: relative; overflow: hidden; background: linear-gradient(135deg, #122B46 0%, #0e2440 60%, #0b6f6a 130%); }
 .hero::before { content: ""; position: absolute; inset: 0; opacity: .13; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='.6'%3E%3Crect x='5' y='5' width='14' height='14'/%3E%3Crect x='5' y='5' width='14' height='14' transform='rotate(45 12 12)'/%3E%3C/svg%3E"); }
+
+/* Gold accent: primary CTA, active nav underline, badges. White-on-gold text is avoided (WCAG AA). */
+.bg-gold { background-color: var(--color-gold); }
+.text-gold-dark { color: #7a5b12; }
+.border-gold { border-color: var(--color-gold); }
+nav a.border-gold-active { border-bottom: 3px solid var(--color-gold); }
+
+/* Responsive: no page-level horizontal scroll; tables stay inside overflow-x-auto. */
+html, body { overflow-x: hidden; }
+.btn, nav a { min-height: 44px; display: inline-flex; align-items: center; }
+input.i, select.i, textarea.i { min-height: 44px; }

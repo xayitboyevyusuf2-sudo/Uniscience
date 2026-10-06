@@ -26,6 +26,7 @@ Route::get('/', [PageController::class, 'home'])->name('home');
 Route::get('/reyting', [RatingController::class, 'index']);
 Route::get('/baza', [PageController::class, 'base']);
 Route::get('/api/jurnallar/qidiruv', JournalSearchController::class)->middleware(['auth', 'throttle:60,1'])->name('journals.search');
+Route::get('/royhat', fn () => redirect('/royxat', 301));
 Route::get('/malumotnoma/{token}', [PageController::class, 'verify']);
 Route::middleware('guest')->group(function () {
     Route::get('/royxat', [AuthController::class, 'showRegister']);

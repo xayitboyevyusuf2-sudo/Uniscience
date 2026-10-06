@@ -11,13 +11,13 @@
 
 <div data-dashboard='@json(['facultyRows' => $facultyRows, 'dynamics' => $dynamics, 'tierDistribution' => $tierDistribution])'>
 <div class="grid gap-4 lg:grid-cols-2">
-<section class="card"><h2 class="font-serif text-lg">Fakultetlar kesimida</h2><div data-skeleton class="h-48 animate-pulse rounded-md bg-slate-200"></div><canvas id="chart-faculty" class="mt-2" height="200"></canvas>
+<section class="card"><h2 class="font-serif text-lg">Fakultetlar kesimida</h2><div data-skeleton>@include('partials.skeleton',['rows'=>4,'height'=>8])</div><canvas id="chart-faculty" class="mt-2" height="200"></canvas>
 <table class="mt-3 w-full text-sm"><tr><th>Fakultet</th><th>Yuklangan</th><th>Tasdiqlangan</th></tr>@forelse($facultyRows as $row)<tr><td>{{ $row['faculty'] }}</td><td>{{ $row['uploaded'] }}</td><td>{{ $row['approved'] }}</td></tr>@empty<tr><td colspan="3" class="text-slate-500">Ma’lumot yo‘q.</td></tr>@endforelse</table></section>
-<section class="card"><h2 class="font-serif text-lg">Yillik dinamika ({{ $year }})</h2><div data-skeleton class="h-48 animate-pulse rounded-md bg-slate-200"></div><canvas id="chart-dynamics" class="mt-2" height="200"></canvas>
+<section class="card"><h2 class="font-serif text-lg">Yillik dinamika ({{ $year }})</h2><div data-skeleton>@include('partials.skeleton',['rows'=>4,'height'=>8])</div><canvas id="chart-dynamics" class="mt-2" height="200"></canvas>
 <table class="mt-3 w-full text-sm"><tr><th>Oy</th><th>Tasdiqlangan</th></tr>@foreach($dynamics as $row)<tr><td>{{ $row['month'] }}-oy</td><td>{{ $row['approved'] }}</td></tr>@endforeach</table></section>
 </div>
 <div class="grid gap-4 lg:grid-cols-2">
-<section class="card"><h2 class="font-serif text-lg">Daraja taqsimoti</h2><div data-skeleton class="h-48 animate-pulse rounded-md bg-slate-200"></div><canvas id="chart-tiers" class="mt-2" height="200"></canvas>
+<section class="card"><h2 class="font-serif text-lg">Daraja taqsimoti</h2><div data-skeleton>@include('partials.skeleton',['rows'=>4,'height'=>8])</div><canvas id="chart-tiers" class="mt-2" height="200"></canvas>
 <table class="mt-3 w-full text-sm"><tr><th>Daraja</th><th>Soni</th></tr>@foreach($tierDistribution as $tier => $count)<tr><td>{{ $tier }}</td><td>{{ $count }}</td></tr>@endforeach</table></section>
 <section class="card"><h2 class="font-serif text-lg">Top ro‘yxatlar</h2>
 @foreach([['Talabalar', $topStudents], ['Magistrlar', $topMasters], ['Professorlar', $topProfessors]] as [$title, $rows])
