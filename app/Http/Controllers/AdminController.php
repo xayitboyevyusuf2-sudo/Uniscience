@@ -121,6 +121,9 @@ class AdminController extends Controller
             }
         }
         $article->update(['status' => $ok ? 'approved' : 'rejected', 'reason' => $ok ? 'Tasdiqlandi (moderator)' : 'Rad etildi: '.$r->note, 'journal_id' => $ok ? $j->id : $article->journal_id]);
+        if ($ok || $r->decision === 'reject') {
+            $article->update(['decided_at' => now(), 'decided_by' => $u->id]);
+        }
         if ($ok && $article->issn && ! $j->issn && ! Journal::where('issn', $article->issn)->exists()) {
             $j->update(['issn' => $article->issn]);
         } // the list learns ISSNs

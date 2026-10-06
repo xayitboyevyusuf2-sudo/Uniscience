@@ -7,8 +7,10 @@ use App\Models\Journal;
 use App\Models\User;
 use App\Notifications\AccountApproved;
 use App\Notifications\ArticleStatus;
+use App\Notifications\ArticleSubmitted;
 use App\Notifications\ResetPasswordUz;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Notification;
 use Tests\TestCase;
 
@@ -29,7 +31,24 @@ class NotificationTest extends TestCase
         Notification::fake();
         Journal::create(['issn' => '1111-2222', 'name' => 'Test jurnal', 'field' => 'Iqtisodiyot', 'tier' => 'D', 'listed_from' => '2019-01-01']);
         $u = User::factory()->create(['direction' => 'Iqtisodiyot']);
-        $this->actingAs($u)->post('/yuklash', ['title' => 'T', 'journal_name' => 'Test jurnal', 'issn' => '1111-2222', 'published_at' => '2025-05-01', 'url' => 'https://x.uz/a', 'position' => 'yolgiz']);
+        $this->actingAs($u)->post('/yuklash', [
+            'title' => 'T',
+            'annotation_uz' => str_repeat('O‘zbekcha annotatsiya. ', 4),
+            'annotation_ru' => str_repeat('Русская аннотация. ', 4),
+            'annotation_en' => str_repeat('English abstract. ', 4),
+            'keywords_uz' => 'ilm, fan, maqola',
+            'keywords_ru' => 'наука, статья, исследование',
+            'keywords_en' => 'science, paper, research',
+            'type' => 'journal_local_oak',
+            'journal_name' => 'Test jurnal',
+            'issn' => '1111-2222',
+            'published_at' => '2025-05-01',
+            'url' => 'https://x.uz/a',
+            'authors' => [['full_name' => $u->name, 'position' => 'yolgiz', 'is_submitter' => '1']],
+            'pdf' => UploadedFile::fake()->create('article.pdf', 8, 'application/pdf'),
+        ]);
+        $this->assertNotNull(Article::where('url', 'https://x.uz/a')->firstOrFail()->decided_at);
+        Notification::assertSentTo($u, ArticleSubmitted::class);
         Notification::assertSentTo($u, ArticleStatus::class);
     }
 

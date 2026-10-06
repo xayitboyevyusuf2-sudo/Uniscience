@@ -3,6 +3,14 @@
 return [
     'yearly_limit' => 6,
     'hemis' => ['enabled' => false],
+    'article_types' => [
+        'journal_local_oak' => 'Mahalliy OAK jurnali',
+        'journal_intl_oak' => 'Xalqaro OAK jurnali',
+        'scopus_q12' => 'Scopus (Q1–Q2)',
+        'scopus_q34_wos' => 'Scopus (Q3–Q4, ESCI, WoS)',
+        'conf_local' => 'Mahalliy konferensiya',
+        'conf_intl' => 'Xalqaro konferensiya',
+    ],
     'admin_email' => env('ADMIN_EMAIL'),
     'admin_password' => env('ADMIN_PASSWORD'),
     // Fields found in the OAK list (multi-field journals are stored as 'A; B'). Related pairs are an ASSUMPTION: confirm with your faculty.
