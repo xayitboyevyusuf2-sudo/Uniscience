@@ -9,7 +9,7 @@
 <a href="/" class="flex items-center gap-2 font-serif text-xl font-bold"><svg class="w-7 h-7 text-teal-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="5" y="5" width="14" height="14"/><rect x="5" y="5" width="14" height="14" transform="rotate(45 12 12)"/></svg>UniScience.uz</a>
 @php
  $nav = [];
- if (auth()->check()) { $nav[] = ['/portfel','Portfel']; $nav[] = ['/yuklash','Yuklash']; $nav[] = ['/jurnallar','Jurnallar']; $nav[] = ['/yoriqnoma','Yo‘riqnoma']; $nav[] = ['/profil','Profil']; }
+ if (auth()->check()) { $nav[] = ['/portfel','Portfel']; $nav[] = ['/yuklash','Yuklash']; $nav[] = ['/jurnallar','Jurnallar']; $nav[] = ['/yoriqnoma','Yo‘riqnoma']; $nav[] = ['/yangiliklar','Yangiliklar']; $nav[] = ['/profil','Profil']; }
  $nav[] = ['/reyting','Reyting']; $nav[] = ['/baza','Baza'];
  if (auth()->check() && in_array(auth()->user()->role,['admin','moderator'])) { $nav[] = ['/admin','Boshqaruv']; $nav[] = ['/moderator/navbat','Moderator navbati']; }
 @endphp

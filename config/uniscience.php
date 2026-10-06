@@ -19,4 +19,5 @@ return [
     'tiers' => ['A' => 10, 'B' => 7, 'C' => 5, 'D' => 3, 'E' => 1, 'X' => 0],
     'positions' => ['yolgiz' => 1.0, 'birinchi' => 0.8, 'oxirgi' => 0.6, 'ortadagi' => 0.4],
     'position_labels' => ['yolgiz' => 'Yolg‘iz', 'birinchi' => 'Birinchi', 'oxirgi' => 'Oxirgi (rahbar)', 'ortadagi' => 'O‘rtadagi'],
+    'news_types' => ['tanlov' => 'Maqola tanlovlari', 'konferensiya' => 'Konferensiyalar', 'stipendiya' => 'Stipendiya tanlovlari', 'boshqa' => 'Boshqa'],
 ];

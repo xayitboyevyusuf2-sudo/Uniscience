@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Article;
 use App\Models\Certificate;
 use App\Models\Journal;
+use App\Models\News;
 use App\Models\User;
 use App\Services\Scorer;
 use App\Services\Verifier;
@@ -16,7 +17,8 @@ class PageController extends Controller
     public function home()
     {
         return view('home', ['score' => auth()->check() ? Scorer::for(auth()->user()) : null,
-            'stats' => ['students' => User::where('role', 'student')->count(), 'articles' => Article::where('status', 'approved')->count(), 'journals' => Journal::count()]]);
+            'stats' => ['students' => User::where('role', 'student')->count(), 'articles' => Article::where('status', 'approved')->count(), 'journals' => Journal::count()],
+            'latestNews' => auth()->check() ? News::active()->orderByDesc('pinned')->latest()->take(3)->get() : collect()]);
     }
 
     public function rating(Request $r)

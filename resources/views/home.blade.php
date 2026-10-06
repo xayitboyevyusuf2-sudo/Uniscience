@@ -17,6 +17,10 @@
 <div class="card"><p class="text-sm text-slate-500">Tasdiqlangan maqolalar</p><p class="font-serif text-4xl text-tl mt-1">{{ auth()->user()->articles()->where('status','approved')->count() }}</p></div>
 <div class="card"><p class="text-sm text-slate-500">Tekshiruvda</p><p class="font-serif text-4xl text-amber-600 mt-1">{{ auth()->user()->articles()->whereIn('status',['pending','manual'])->count() }}</p></div></div>
 <a class="text-lapis underline" href="/portfel">Portfelni ko‘rish →</a>
+@if($latestNews->isNotEmpty())<section class="mt-6"><div class="mb-2 flex items-center justify-between"><h2 class="font-serif text-xl">So‘nggi yangiliklar</h2><a class="text-sm underline" href="/yangiliklar">Barchasi</a></div>
+<div class="grid gap-3 sm:grid-cols-3">@foreach($latestNews as $item)<a class="card !mb-0 block hover:shadow-md" href="/yangiliklar"><span class="rounded-full bg-slate-100 px-2 py-0.5 text-xs text-slate-700">{{ config('uniscience.news_types.'.$item->type, $item->type) }}</span>
+<h3 class="mt-2 font-semibold">{{ $item->title }}</h3><p class="mt-1 line-clamp-3 text-sm text-slate-600">{{ $item->body }}</p>
+<p class="mt-2 text-xs text-slate-500">@if($item->deadline)Muddat: {{ $item->deadline->format('Y-m-d') }} · @endif{{ $item->created_at->format('Y-m-d') }}</p></a>@endforeach</div></section>@endif
 @else
 <div class="grid grid-cols-3 gap-3 text-center -mt-12 relative">
 @foreach([['Talabalar',$stats['students']],['Tasdiqlangan maqolalar',$stats['articles']],['OAK jurnallari',$stats['journals']]] as [$l,$n])<div class="card !mb-0 shadow-md"><p class="font-serif text-3xl text-lapis">{{ $n }}</p><p class="text-xs sm:text-sm text-slate-500">{{ $l }}</p></div>@endforeach</div>

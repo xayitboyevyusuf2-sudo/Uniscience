@@ -11,7 +11,7 @@
 <button name="decision" value="approve" class="btn mt-2">Tasdiqlash</button> <button name="decision" value="reject" class="btn mt-2 bg-red-700!">Rad etish</button></form>
 @empty<p class="text-slate-500">Navbat bo‘sh.</p>@endforelse</div>
 @if(auth()->user()->role==='admin')
-<div class="card"><div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-serif text-xl">Sozlamalar</h2><a class="underline" href="/admin/audit">Admin audit jurnali</a></div><form method="post" action="/admin/sozlamalar">@csrf
+<div class="card"><div class="flex flex-wrap items-center justify-between gap-3"><h2 class="font-serif text-xl">Sozlamalar</h2><span class="flex gap-3 text-sm"><a class="underline" href="/admin/audit">Admin audit jurnali</a><a class="underline" href="/admin/yangiliklar">Yangiliklar boshqaruvi</a><a class="underline" href="/admin/yoriqnoma">Yo‘riqnoma hujjatlari</a><a class="underline" href="/admin/videolar">Video darslar</a></span></div><form method="post" action="/admin/sozlamalar">@csrf
 <label>Yiliga hisobga olinadigan maqolalar</label><input class="i" type="number" name="yearly_limit" value="{{ $limit }}"><button class="btn mt-2">Saqlash</button></form>
 @foreach($log as $l)<p class="text-xs text-slate-500">{{ $l->created_at }}: {{ $l->key }} {{ $l->old }} → {{ $l->new }}</p>@endforeach</div>
 <div class="card"><h2 class="font-serif text-xl">OAK ro‘yxatini import (CSV)</h2><p class="text-sm text-slate-500">Ustunlar: issn,name,field,tier,listed_from,listed_to. Eski yozuvlar o‘chirilmaydi.</p>
