@@ -58,9 +58,13 @@ class RegisterRequest extends FormRequest
             if (User::whereRaw('LOWER(username) = ?', [Str::lower($fullName)])->exists()) {
                 $validator->errors()->add('username', 'Bu F.I.Sh. bilan foydalanuvchi mavjud. Agar bu siz bo‘lsangiz, kirish sahifasidan foydalaning yoki administratorga murojaat qiling.');
             }
+        }];
+    }
+
+    public function messages(): array
     {
         return [
-            'required' => ':attribute maydoni majburiy.',
+            'required' => ':attribute maydoni majburiy.',            'required' => ':attribute maydoni majburiy.',
             'string' => ':attribute matn shaklida bo‘lishi kerak.',
             'max' => ':attribute :max belgidan oshmasligi kerak.',
             'integer' => ':attribute butun son bo‘lishi kerak.',

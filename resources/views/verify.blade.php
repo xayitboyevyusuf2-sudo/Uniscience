@@ -6,5 +6,5 @@
 <p class="text-sm text-slate-500">Berilgan sana: {{ $c->created_at->format('Y-m-d') }}. Bu sahifa tizimdagi haqiqiy yozuvni ko‘rsatadi.</p>
 @if(class_exists(\SimpleSoftwareIO\QrCode\Facades\QrCode::class)){!! \SimpleSoftwareIO\QrCode\Facades\QrCode::size(130)->generate(url()->current()) !!}@endif</div>
 <div class="card overflow-x-auto"><table class="w-full text-sm"><tr><th>Maqola</th><th>Jurnal</th><th>Daraja</th><th>Ball</th></tr>
-@foreach($s['rows'] as $r)@if($r['counted'])<tr><td>{{ $r['article']->title }}</td><td>{{ $r['article']->journal->name }}</td><td>{{ $r['article']->journal->tier }}</td><td>{{ number_format($r['pts'],2) }}</td></tr>@endif @endforeach</table></div>
+@foreach($s['rows'] as $r)@if($r['counted'])<tr><td>{{ $r['article']->title }}</td><td>{{ $r['article']->journal?->name ?? $r['article']->journal_name ?? '—' }}</td><td>{{ $r['article']->journal?->tier ?? '—' }}</td><td>{{ number_format($r['pts'],2) }}</td></tr>@endif @endforeach</table></div>
 @endsection

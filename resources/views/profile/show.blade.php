@@ -23,7 +23,7 @@
 @if($u->bio)<div class="card"><h2 class="font-serif text-lg mb-2">Men haqimda</h2><p class="whitespace-pre-line">{{ $u->bio }}</p></div>
 @elseif(auth()->id()===$u->id)<div class="card text-slate-500">Hali o‘zingiz haqingizda yozmagansiz. <a class="text-lapis underline" href="/profil">Qo‘shish</a></div>@endif
 <div class="card overflow-x-auto"><h2 class="font-serif text-lg mb-2">Tasdiqlangan maqolalar</h2><table class="w-full text-sm"><tr><th>Maqola</th><th>Jurnal</th><th>Daraja</th><th>Ball</th></tr>
-@forelse($rows as $r)<tr><td>{{ $r['article']->title }}</td><td>{{ $r['article']->journal->name }}</td><td>{{ $r['article']->journal->tier }}</td><td>{{ number_format($r['pts'],2) }}</td></tr>
+@forelse($rows as $r)<tr><td>{{ $r['article']->title }}</td><td>{{ $r['article']->journal?->name ?? $r['article']->journal_name ?? '—' }}</td><td>{{ number_format($r['pts'],2) }}</td></tr>
 @empty<tr><td colspan="4" class="text-slate-500">Hozircha tasdiqlangan maqola yo‘q.</td></tr>@endforelse</table></div>
 @include('profile.partials.supervision')
 @include('profile.partials.leisure')
